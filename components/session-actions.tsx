@@ -1,10 +1,19 @@
 'use client';
 
+import type { Route } from 'next';
 import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 
-export function DeleteSessionButton({ sessionId }: { sessionId: string }) {
+export function DeleteSessionButton({
+  sessionId,
+  redirectTo
+}: {
+  sessionId: string;
+  redirectTo?: Route;
+}) {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   function onDelete() {
     const confirmed = window.confirm('Delete this session and its saved artifacts?');
@@ -23,7 +32,11 @@ export function DeleteSessionButton({ sessionId }: { sessionId: string }) {
           throw new Error(body.error || `Request failed: ${response.status}`);
         }
 
-        window.location.reload();
+        if (redirectTo) {
+          router.push(redirectTo);
+        } else {
+          router.refresh();
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       }
@@ -43,6 +56,7 @@ export function DeleteSessionButton({ sessionId }: { sessionId: string }) {
 export function ClearSessionsButton() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   function onClear() {
     const confirmed = window.confirm('Delete all sessions, uploads, and derived artifacts?');
@@ -57,10 +71,11 @@ export function ClearSessionsButton() {
         const response = await fetch('/api/sessions', { method: 'DELETE' });
 
         if (!response.ok) {
-          throw new Error(`Request failed: ${response.status}`);
+          const body = (await response.json()) as { error?: string };
+          throw new Error(body.error || `Request failed: ${response.status}`);
         }
 
-        window.location.reload();
+        router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Unknown error');
       }

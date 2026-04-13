@@ -113,7 +113,7 @@ export default async function SessionDetailsPage({
             initialNotes={session.notes}
             initialPlayerContext={session.playerContext}
           />
-          <DeleteSessionButton sessionId={session.id} />
+          <DeleteSessionButton sessionId={session.id} redirectTo="/sessions" />
         </article>
 
         <article className="card grid" style={{ gap: 12 }}>
