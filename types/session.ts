@@ -1,4 +1,5 @@
 import type {
+  CoachingAnalysisMetadata,
   PoseEstimationResult,
   SwingAnalysisResponse,
   SwingAnalysisRequest,
@@ -38,6 +39,7 @@ export type SwingSessionRecord = {
     poseEstimation: PoseEstimationResult | null;
     phases: SwingPhaseDetection | null;
     mediaArtifacts: MediaArtifactResult | null;
+    coachingAnalysis: CoachingAnalysisMetadata | null;
   };
   analysis: SwingAnalysisResponse | null;
   error: string | null;

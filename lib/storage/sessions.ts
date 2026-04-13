@@ -17,7 +17,8 @@ function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord 
       failedStage: record.pipeline?.failedStage || null,
       poseEstimation: record.pipeline?.poseEstimation || null,
       phases: record.pipeline?.phases || null,
-      mediaArtifacts: record.pipeline?.mediaArtifacts || null
+      mediaArtifacts: record.pipeline?.mediaArtifacts || null,
+      coachingAnalysis: record.pipeline?.coachingAnalysis || null
     }
   };
 }
@@ -48,7 +49,8 @@ export async function createUploadedSession(upload: StoredUpload): Promise<Swing
       failedStage: null,
       poseEstimation: null,
       phases: null,
-      mediaArtifacts: null
+      mediaArtifacts: null,
+      coachingAnalysis: null
     },
     analysis: null,
     error: null,

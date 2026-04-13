@@ -1,9 +1,9 @@
 import type { SwingAnalysisRequest, SwingAnalysisResponse } from '@/types/analysis';
 import type { SwingSessionPipelineStage, SwingSessionRecord } from '@/types/session';
 import { detectSwingPhases } from '@/lib/phases';
-import { buildMockSwingAnalysis } from '@/lib/mock-analysis';
 import { writeSession } from '@/lib/storage/sessions';
 import { extractMediaArtifacts } from '@/services/media-artifacts';
+import { analyzeSwingCoaching } from '@/services/coaching-analysis';
 import { estimatePoseFromVideo } from '@/services/pose-estimation';
 
 type PersistableSession = SwingSessionRecord & {
@@ -70,18 +70,29 @@ export async function runSwingAnalysis({
     }
   });
 
-  const result = buildMockSwingAnalysis({
+  const coachingAnalysis = await analyzeSwingCoaching({
     request,
     metrics: poseEstimation.metrics,
     phases
   });
 
+  await saveStage(session, 'coaching-analysis', {
+    pipeline: {
+      ...session.pipeline,
+      coachingAnalysis: coachingAnalysis.metadata
+    }
+  });
+
+  if (coachingAnalysis.error || !coachingAnalysis.response) {
+    throw new Error(coachingAnalysis.error || 'Coaching analysis returned no response.');
+  }
+
   await saveStage(session, 'complete', {
-    analysis: result,
+    analysis: coachingAnalysis.response,
     status: 'complete'
   });
 
-  return result;
+  return coachingAnalysis.response;
 }
 
 export async function markSwingAnalysisFailure({

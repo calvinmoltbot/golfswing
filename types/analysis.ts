@@ -70,21 +70,48 @@ export type SwingPhaseDetection = {
   finishMs: number;
 };
 
-export type SwingAnalysisResponse = {
-  summary: string;
-  confidence: 'low' | 'medium' | 'high';
-  priorityFixes: string[];
-  phaseObservations: {
-    address: string;
-    backswing: string;
-    top: string;
-    transition: string;
-    impact: string;
-    finish: string;
-  };
-  drills: Array<{
-    name: string;
-    reason: string;
-  }>;
-  warnings: string[];
+export const swingAnalysisResponseSchema = z.object({
+  summary: z.string().min(1),
+  confidence: z.enum(['low', 'medium', 'high']),
+  priorityFixes: z.array(z.string().min(1)),
+  phaseObservations: z.object({
+    address: z.string().min(1),
+    backswing: z.string().min(1),
+    top: z.string().min(1),
+    transition: z.string().min(1),
+    impact: z.string().min(1),
+    finish: z.string().min(1)
+  }),
+  drills: z.array(
+    z.object({
+      name: z.string().min(1),
+      reason: z.string().min(1)
+    })
+  ),
+  warnings: z.array(z.string())
+});
+
+export type SwingAnalysisResponse = z.infer<typeof swingAnalysisResponseSchema>;
+
+export type CoachingAnalysisMetadata = {
+  providerId: string;
+  model: string;
+  requestedAt: string;
+  completedAt: string | null;
+  validationError: string | null;
+};
+
+export type CoachingAnalysisResult = {
+  metadata: CoachingAnalysisMetadata;
+  response: SwingAnalysisResponse | null;
+  error: string | null;
+};
+
+export type CoachingAnalysisProvider = {
+  id: string;
+  analyze(input: {
+    request: SwingAnalysisRequest;
+    metrics: PoseMetrics;
+    phases: SwingPhaseDetection;
+  }): Promise<CoachingAnalysisResult>;
 };

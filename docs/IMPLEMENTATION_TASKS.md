@@ -69,6 +69,20 @@ Completed:
 8. Add environment-guarded switching between mock and real providers
 9. Add retry and timeout handling for model calls
 
+Working milestone breakdown:
+
+1. Add `services/coaching-analysis` with:
+   - `mock` provider
+   - `openrouter` provider
+   - provider resolver with env-based selection
+2. Add a runtime response schema for the current typed analysis contract
+3. Validate OpenRouter output before persisting any analysis result
+4. Persist coaching provider metadata on the session record
+5. Show coaching provider metadata on the session details page
+6. Fall back to mock coaching automatically when OpenRouter is not configured
+7. Keep explicit `COACHING_ANALYSIS_PROVIDER` support for forced provider testing
+8. Commit this as the next stable milestone before moving to comparison features
+
 ## Next stage 5 — improve the product surface
 
 1. Add a session details page with:
@@ -115,10 +129,11 @@ Completed:
 Implement the next stage for this repository in small working steps.
 Start with:
 
-- an isolated `services/pose-estimation` provider interface
-- a mock provider implementation using the current placeholder logic
-- persisted pose and phase outputs on the session record
-- a session details page to inspect stored pipeline artifacts
+- an isolated `services/coaching-analysis` provider interface
+- a mock coaching provider using the current placeholder logic
+- an OpenRouter-backed provider behind the same typed output contract
+- persisted coaching provider metadata on the session record
+- a session details view for coaching provider/model/debug metadata
 
 Keep the code simple and production-minded.
 Do not add unnecessary dependencies.

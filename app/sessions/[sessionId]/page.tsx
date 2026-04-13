@@ -184,6 +184,42 @@ export default async function SessionDetailsPage({
       </section>
 
       <section className="card grid" style={{ gap: 12 }}>
+        <h2 style={{ margin: 0 }}>Coaching analysis</h2>
+        {session.pipeline.coachingAnalysis ? (
+          <div className="grid grid-3">
+            <MetricCard label="Provider" value={session.pipeline.coachingAnalysis.providerId} />
+            <MetricCard label="Model" value={session.pipeline.coachingAnalysis.model} />
+            <MetricCard
+              label="Requested"
+              value={formatDate(session.pipeline.coachingAnalysis.requestedAt)}
+            />
+            <MetricCard
+              label="Completed"
+              value={
+                session.pipeline.coachingAnalysis.completedAt
+                  ? formatDate(session.pipeline.coachingAnalysis.completedAt)
+                  : 'Not completed'
+              }
+            />
+            <MetricCard
+              label="Validation"
+              value={session.pipeline.coachingAnalysis.validationError ? 'Failed' : 'Passed'}
+            />
+          </div>
+        ) : (
+          <div className="card inset">
+            <p style={{ margin: 0 }}>No coaching-analysis metadata saved yet.</p>
+          </div>
+        )}
+        {session.pipeline.coachingAnalysis?.validationError ? (
+          <div className="card inset">
+            <div className="muted">Validation or provider error</div>
+            <p style={{ marginBottom: 0 }}>{session.pipeline.coachingAnalysis.validationError}</p>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="card grid" style={{ gap: 12 }}>
         <h2 style={{ margin: 0 }}>Media artifacts</h2>
         {session.pipeline.mediaArtifacts ? (
           <>
