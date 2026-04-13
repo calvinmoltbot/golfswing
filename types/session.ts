@@ -1,4 +1,9 @@
-import type { SwingAnalysisResponse, SwingAnalysisRequest } from '@/types/analysis';
+import type {
+  PoseEstimationResult,
+  SwingAnalysisResponse,
+  SwingAnalysisRequest,
+  SwingPhaseDetection
+} from '@/types/analysis';
 
 export type SwingSessionStatus = 'uploaded' | 'analyzing' | 'complete' | 'failed';
 
@@ -18,6 +23,10 @@ export type SwingSessionRecord = {
   status: SwingSessionStatus;
   notes: string;
   playerContext: SwingAnalysisRequest['playerContext'] | null;
+  pipeline: {
+    poseEstimation: PoseEstimationResult | null;
+    phases: SwingPhaseDetection | null;
+  };
   analysis: SwingAnalysisResponse | null;
   error: string | null;
   file: {

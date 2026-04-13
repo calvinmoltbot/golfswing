@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import Link from 'next/link';
 import { listSessions } from '@/lib/storage/sessions';
 
@@ -36,41 +37,52 @@ export default async function SessionsPage() {
         </section>
       ) : (
         <section className="grid">
-          {sessions.map((session) => (
-            <article key={session.id} className="card grid" style={{ gap: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-                <div>
-                  <h2 style={{ margin: 0 }}>{session.file.originalName}</h2>
-                  <p className="muted" style={{ margin: '6px 0 0' }}>
-                    Uploaded {formatDate(session.createdAt)}
-                  </p>
-                </div>
-                <div className="pill">{session.status}</div>
-              </div>
-              <div className="grid grid-3">
-                <div className="card inset">
-                  <div className="muted">Session ID</div>
-                  <div className="code">{session.id}</div>
-                </div>
-                <div className="card inset">
-                  <div className="muted">Format</div>
-                  <div>{session.file.mimeType}</div>
-                </div>
-                <div className="card inset">
-                  <div className="muted">Size</div>
-                  <div>{formatBytes(session.file.sizeBytes)}</div>
-                </div>
-              </div>
-              {session.analysis ? (
-                <div className="card inset">
-                  <div className="muted" style={{ marginBottom: 8 }}>
-                    Latest analysis
+          {sessions.map((session) => {
+            const sessionHref = `/sessions/${session.id}` as Route;
+
+            return (
+              <article key={session.id} className="card grid" style={{ gap: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                  <div>
+                    <h2 style={{ margin: 0 }}>
+                      <Link href={sessionHref}>{session.file.originalName}</Link>
+                    </h2>
+                    <p className="muted" style={{ margin: '6px 0 0' }}>
+                      Uploaded {formatDate(session.createdAt)}
+                    </p>
                   </div>
-                  <p style={{ margin: 0 }}>{session.analysis.summary}</p>
+                  <div className="pill">{session.status}</div>
                 </div>
-              ) : null}
-            </article>
-          ))}
+                <div className="grid grid-3">
+                  <div className="card inset">
+                    <div className="muted">Session ID</div>
+                    <div className="code">{session.id}</div>
+                  </div>
+                  <div className="card inset">
+                    <div className="muted">Format</div>
+                    <div>{session.file.mimeType}</div>
+                  </div>
+                  <div className="card inset">
+                    <div className="muted">Size</div>
+                    <div>{formatBytes(session.file.sizeBytes)}</div>
+                  </div>
+                </div>
+                {session.analysis ? (
+                  <div className="card inset">
+                    <div className="muted" style={{ marginBottom: 8 }}>
+                      Latest analysis
+                    </div>
+                    <p style={{ margin: 0 }}>{session.analysis.summary}</p>
+                    <p style={{ margin: '10px 0 0' }}>
+                      <Link href={sessionHref} className="muted">
+                        View full session details
+                      </Link>
+                    </p>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
         </section>
       )}
     </main>

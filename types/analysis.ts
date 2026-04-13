@@ -14,6 +14,18 @@ export const swingAnalysisRequestSchema = z.object({
 
 export type SwingAnalysisRequest = z.infer<typeof swingAnalysisRequestSchema>;
 
+export type PoseKeypoint = {
+  name: string;
+  x: number;
+  y: number;
+  confidence: number;
+};
+
+export type PoseKeypointFrame = {
+  timestampMs: number;
+  keypoints: PoseKeypoint[];
+};
+
 export type PoseMetrics = {
   sourceVideoPath: string;
   fps: number;
@@ -31,6 +43,22 @@ export type PoseMetrics = {
     hipTurnDeg: number;
     tempoRatio: number;
   };
+};
+
+export type PoseEstimationProviderInfo = {
+  id: string;
+  version: string;
+};
+
+export type PoseEstimationResult = {
+  provider: PoseEstimationProviderInfo;
+  metrics: PoseMetrics;
+  keypointFrames: PoseKeypointFrame[];
+};
+
+export type PoseEstimationProvider = {
+  id: string;
+  estimate(input: { videoPath: string }): Promise<PoseEstimationResult>;
 };
 
 export type SwingPhaseDetection = {

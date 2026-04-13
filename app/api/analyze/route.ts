@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { swingAnalysisRequestSchema, type SwingAnalysisResponse } from '@/types/analysis';
-import { extractPoseMetrics } from '@/lib/pose';
 import { detectSwingPhases } from '@/lib/phases';
 import { buildMockSwingAnalysis } from '@/lib/mock-analysis';
 import { readSession, writeSession } from '@/lib/storage/sessions';
+import { estimatePoseFromVideo } from '@/services/pose-estimation';
 
 export async function POST(request: Request) {
   let sessionId: string | null = null;
@@ -23,12 +23,18 @@ export async function POST(request: Request) {
     session.error = null;
     await writeSession(session);
 
-    const metrics = await extractPoseMetrics(session.file.absolutePath);
-    const phases = detectSwingPhases(metrics);
-    const result: SwingAnalysisResponse = buildMockSwingAnalysis({ request: parsed, metrics, phases });
+    const poseEstimation = await estimatePoseFromVideo({ videoPath: session.file.absolutePath });
+    const phases = detectSwingPhases(poseEstimation.metrics);
+    const result: SwingAnalysisResponse = buildMockSwingAnalysis({
+      request: parsed,
+      metrics: poseEstimation.metrics,
+      phases
+    });
 
     session.notes = parsed.notes;
     session.playerContext = parsed.playerContext;
+    session.pipeline.poseEstimation = poseEstimation;
+    session.pipeline.phases = phases;
     session.analysis = result;
     session.status = 'complete';
     session.updatedAt = new Date().toISOString();

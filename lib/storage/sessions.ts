@@ -30,6 +30,10 @@ export async function createUploadedSession(upload: StoredUpload): Promise<Swing
     status: 'uploaded',
     notes: '',
     playerContext: null,
+    pipeline: {
+      poseEstimation: null,
+      phases: null
+    },
     analysis: null,
     error: null,
     file: {
