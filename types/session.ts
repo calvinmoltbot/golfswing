@@ -4,6 +4,7 @@ import type {
   SwingAnalysisRequest,
   SwingPhaseDetection
 } from '@/types/analysis';
+import type { MediaArtifactResult } from '@/types/media-artifacts';
 
 export type SwingSessionStatus = 'uploaded' | 'analyzing' | 'complete' | 'failed';
 
@@ -26,6 +27,7 @@ export type SwingSessionRecord = {
   pipeline: {
     poseEstimation: PoseEstimationResult | null;
     phases: SwingPhaseDetection | null;
+    mediaArtifacts: MediaArtifactResult | null;
   };
   analysis: SwingAnalysisResponse | null;
   error: string | null;

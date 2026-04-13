@@ -3,6 +3,7 @@ import { swingAnalysisRequestSchema, type SwingAnalysisResponse } from '@/types/
 import { detectSwingPhases } from '@/lib/phases';
 import { buildMockSwingAnalysis } from '@/lib/mock-analysis';
 import { readSession, writeSession } from '@/lib/storage/sessions';
+import { extractMediaArtifacts } from '@/services/media-artifacts';
 import { estimatePoseFromVideo } from '@/services/pose-estimation';
 
 export async function POST(request: Request) {
@@ -25,6 +26,11 @@ export async function POST(request: Request) {
 
     const poseEstimation = await estimatePoseFromVideo({ videoPath: session.file.absolutePath });
     const phases = detectSwingPhases(poseEstimation.metrics);
+    const mediaArtifacts = await extractMediaArtifacts({
+      sessionId: session.id,
+      videoPath: session.file.absolutePath,
+      keyFrames: poseEstimation.metrics.keyFrames
+    });
     const result: SwingAnalysisResponse = buildMockSwingAnalysis({
       request: parsed,
       metrics: poseEstimation.metrics,
@@ -35,6 +41,7 @@ export async function POST(request: Request) {
     session.playerContext = parsed.playerContext;
     session.pipeline.poseEstimation = poseEstimation;
     session.pipeline.phases = phases;
+    session.pipeline.mediaArtifacts = mediaArtifacts;
     session.analysis = result;
     session.status = 'complete';
     session.updatedAt = new Date().toISOString();

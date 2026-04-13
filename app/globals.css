@@ -25,4 +25,7 @@ main { max-width: 980px; margin: 0 auto; padding: 32px 20px 80px; }
 .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .prewrap { white-space: pre-wrap; overflow-x: auto; }
 .break { overflow-wrap: anywhere; }
+.artifact-preview { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; background: #0d1424; }
+.artifact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.artifact-card { display: grid; gap: 8px; }
 .pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #0d1424; border: 1px solid var(--border); color: var(--muted); text-transform: capitalize; }

@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 const dataRoot = path.join(process.cwd(), 'data');
 const uploadsRoot = path.join(dataRoot, 'uploads');
 const sessionsRoot = path.join(dataRoot, 'sessions');
+const artifactsRoot = path.join(dataRoot, 'artifacts');
 
 export type StoredUpload = {
   sessionId: string;
@@ -20,7 +21,8 @@ export async function ensureLocalStorage() {
   await Promise.all([
     mkdir(dataRoot, { recursive: true }),
     mkdir(uploadsRoot, { recursive: true }),
-    mkdir(sessionsRoot, { recursive: true })
+    mkdir(sessionsRoot, { recursive: true }),
+    mkdir(artifactsRoot, { recursive: true })
   ]);
 }
 

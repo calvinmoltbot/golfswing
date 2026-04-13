@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
+import path from 'node:path';
 import { persistUpload } from '@/lib/storage/uploads';
 import { createUploadedSession, toUploadedSwingSession } from '@/lib/storage/sessions';
 
 const allowedMimeTypes = new Set(['video/mp4', 'video/quicktime', 'video/webm']);
+const allowedExtensions = new Set(['.mp4', '.mov', '.webm']);
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +15,10 @@ export async function POST(request: Request) {
       throw new Error('A video file is required.');
     }
 
-    if (!allowedMimeTypes.has(maybeFile.type)) {
+    const extension = path.extname(maybeFile.name).toLowerCase();
+    const looksLikeAllowedVideo = allowedMimeTypes.has(maybeFile.type) || allowedExtensions.has(extension);
+
+    if (!looksLikeAllowedVideo) {
       throw new Error('Upload an MP4, MOV, or WebM swing clip.');
     }
 

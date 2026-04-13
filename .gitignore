@@ -4,3 +4,4 @@ node_modules
 tsconfig.tsbuildinfo
 data/uploads
 data/sessions
+data/artifacts

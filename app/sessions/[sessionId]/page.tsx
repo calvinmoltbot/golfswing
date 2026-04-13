@@ -141,6 +141,54 @@ export default async function SessionDetailsPage({
           ) : null}
         </article>
       </section>
+
+      <section className="card grid" style={{ gap: 12 }}>
+        <h2 style={{ margin: 0 }}>Media artifacts</h2>
+        {session.pipeline.mediaArtifacts ? (
+          <>
+            <div className="grid grid-3">
+              <div className="card inset">
+                <div className="muted">Provider</div>
+                <div>{session.pipeline.mediaArtifacts.provider.id}</div>
+              </div>
+              <div className="card inset">
+                <div className="muted">Version</div>
+                <div>{session.pipeline.mediaArtifacts.provider.version}</div>
+              </div>
+              <div className="card inset">
+                <div className="muted">Key frames</div>
+                <div>{session.pipeline.mediaArtifacts.keyFrames.length}</div>
+              </div>
+            </div>
+            {session.pipeline.mediaArtifacts.poster ? (
+              <div className="card inset">
+                <div className="muted" style={{ marginBottom: 8 }}>Poster</div>
+                <img
+                  src={session.pipeline.mediaArtifacts.poster.urlPath}
+                  alt={`${session.file.originalName} poster`}
+                  className="artifact-preview"
+                />
+              </div>
+            ) : null}
+            <div className="artifact-grid">
+              {session.pipeline.mediaArtifacts.keyFrames.map((artifact) => (
+                <div key={artifact.fileName} className="card inset artifact-card">
+                  <div className="muted">{artifact.label || artifact.type}</div>
+                  <img
+                    src={artifact.urlPath}
+                    alt={`${session.file.originalName} ${artifact.label || artifact.type}`}
+                    className="artifact-preview"
+                  />
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="card inset">
+            <p style={{ margin: 0 }}>No media artifacts saved yet.</p>
+          </div>
+        )}
+      </section>
     </main>
   );
 }
