@@ -1,19 +1,21 @@
 import { z } from 'zod';
 
+export const playerContextSchema = z.object({
+  handedness: z.enum(['right', 'left']),
+  cameraView: z.enum(['down-the-line', 'face-on']),
+  club: z.string().min(1)
+});
+
 export const swingAnalysisRequestSchema = z.object({
-  videoUrl: z.string().url(),
+  sessionId: z.string().min(1),
   notes: z.string().max(4000).optional().default(''),
-  playerContext: z.object({
-    handedness: z.enum(['right', 'left']),
-    cameraView: z.enum(['down-the-line', 'face-on']),
-    club: z.string().min(1)
-  })
+  playerContext: playerContextSchema
 });
 
 export type SwingAnalysisRequest = z.infer<typeof swingAnalysisRequestSchema>;
 
 export type PoseMetrics = {
-  sourceVideoUrl: string;
+  sourceVideoPath: string;
   fps: number;
   durationMs: number;
   keyFrames: Array<{

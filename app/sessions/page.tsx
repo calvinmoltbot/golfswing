@@ -61,6 +61,14 @@ export default async function SessionsPage() {
                   <div>{formatBytes(session.file.sizeBytes)}</div>
                 </div>
               </div>
+              {session.analysis ? (
+                <div className="card inset">
+                  <div className="muted" style={{ marginBottom: 8 }}>
+                    Latest analysis
+                  </div>
+                  <p style={{ margin: 0 }}>{session.analysis.summary}</p>
+                </div>
+              ) : null}
             </article>
           ))}
         </section>

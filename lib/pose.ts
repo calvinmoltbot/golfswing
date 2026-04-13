@@ -1,10 +1,10 @@
 import type { PoseMetrics } from '@/types/analysis';
 
-export async function extractPoseMetrics(videoUrl: string): Promise<PoseMetrics> {
+export async function extractPoseMetrics(videoPath: string): Promise<PoseMetrics> {
   // Placeholder implementation.
   // Replace with MediaPipe, MoveNet, BlazePose, or a server-side CV pipeline.
   return {
-    sourceVideoUrl: videoUrl,
+    sourceVideoPath: videoPath,
     fps: 30,
     durationMs: 2200,
     keyFrames: [
