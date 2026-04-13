@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { UploadForm } from '@/components/upload-form';
 
 export default function HomePage() {
@@ -34,7 +35,12 @@ export default function HomePage() {
       </section>
 
       <section className="card">
-        <h2>Analyze a swing</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <h2 style={{ margin: 0 }}>Analyze a swing</h2>
+          <Link href="/sessions" className="button secondary">
+            View sessions
+          </Link>
+        </div>
         <UploadForm />
       </section>
     </main>

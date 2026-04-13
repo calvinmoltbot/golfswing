@@ -1,0 +1,70 @@
+import Link from 'next/link';
+import { listSessions } from '@/lib/storage/sessions';
+
+function formatBytes(sizeBytes: number) {
+  return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(new Date(value));
+}
+
+export default async function SessionsPage() {
+  const sessions = await listSessions();
+
+  return (
+    <main className="grid" style={{ gap: 24 }}>
+      <section className="grid" style={{ gap: 8 }}>
+        <Link href="/" className="muted">
+          Back to upload
+        </Link>
+        <div>
+          <h1 style={{ fontSize: 36, marginBottom: 8 }}>Swing Sessions</h1>
+          <p className="muted" style={{ maxWidth: 760 }}>
+            Uploaded sessions persisted on the local filesystem for development. New uploads appear here immediately.
+          </p>
+        </div>
+      </section>
+
+      {sessions.length === 0 ? (
+        <section className="card">
+          <h2>No sessions yet</h2>
+          <p className="muted">Upload your first swing clip from the home page.</p>
+        </section>
+      ) : (
+        <section className="grid">
+          {sessions.map((session) => (
+            <article key={session.id} className="card grid" style={{ gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                <div>
+                  <h2 style={{ margin: 0 }}>{session.file.originalName}</h2>
+                  <p className="muted" style={{ margin: '6px 0 0' }}>
+                    Uploaded {formatDate(session.createdAt)}
+                  </p>
+                </div>
+                <div className="pill">{session.status}</div>
+              </div>
+              <div className="grid grid-3">
+                <div className="card inset">
+                  <div className="muted">Session ID</div>
+                  <div className="code">{session.id}</div>
+                </div>
+                <div className="card inset">
+                  <div className="muted">Format</div>
+                  <div>{session.file.mimeType}</div>
+                </div>
+                <div className="card inset">
+                  <div className="muted">Size</div>
+                  <div>{formatBytes(session.file.sizeBytes)}</div>
+                </div>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
+    </main>
+  );
+}
