@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { ReanalyzeButton } from '@/components/reanalyze-button';
 import { readSession } from '@/lib/storage/sessions';
 
 function formatDate(value: string) {
@@ -32,6 +33,10 @@ export default async function SessionDetailsPage({
           <p className="muted">
             Session {session.id} • Uploaded {formatDate(session.createdAt)} • Status {session.status}
           </p>
+          <p className="muted">
+            Current stage: {session.pipeline.currentStage}
+            {session.pipeline.failedStage ? ` • Failed at: ${session.pipeline.failedStage}` : ''}
+          </p>
         </div>
       </section>
 
@@ -60,6 +65,11 @@ export default async function SessionDetailsPage({
             <div className="muted">Notes</div>
             <p style={{ marginBottom: 0 }}>{session.notes || 'No player notes.'}</p>
           </div>
+          <ReanalyzeButton
+            sessionId={session.id}
+            initialNotes={session.notes}
+            initialPlayerContext={session.playerContext}
+          />
         </article>
 
         <article className="card grid" style={{ gap: 12 }}>

@@ -7,6 +7,14 @@ import type {
 import type { MediaArtifactResult } from '@/types/media-artifacts';
 
 export type SwingSessionStatus = 'uploaded' | 'analyzing' | 'complete' | 'failed';
+export type SwingSessionPipelineStage =
+  | 'uploaded'
+  | 'pose-estimation'
+  | 'phase-detection'
+  | 'media-artifacts'
+  | 'coaching-analysis'
+  | 'complete'
+  | 'failed';
 
 export type UploadedSwingSession = {
   id: string;
@@ -25,6 +33,8 @@ export type SwingSessionRecord = {
   notes: string;
   playerContext: SwingAnalysisRequest['playerContext'] | null;
   pipeline: {
+    currentStage: SwingSessionPipelineStage;
+    failedStage: SwingSessionPipelineStage | null;
     poseEstimation: PoseEstimationResult | null;
     phases: SwingPhaseDetection | null;
     mediaArtifacts: MediaArtifactResult | null;

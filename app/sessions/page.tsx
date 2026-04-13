@@ -63,8 +63,8 @@ export default async function SessionsPage() {
                     <div>{session.file.mimeType}</div>
                   </div>
                   <div className="card inset">
-                    <div className="muted">Size</div>
-                    <div>{formatBytes(session.file.sizeBytes)}</div>
+                    <div className="muted">Status</div>
+                    <div>{session.status}</div>
                   </div>
                 </div>
                 {session.analysis ? (

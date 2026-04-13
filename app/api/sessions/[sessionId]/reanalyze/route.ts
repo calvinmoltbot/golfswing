@@ -1,18 +1,21 @@
 import { NextResponse } from 'next/server';
 import { swingAnalysisRequestSchema } from '@/types/analysis';
-import type { SwingSessionPipelineStage } from '@/types/session';
 import { readSession } from '@/lib/storage/sessions';
 import { markSwingAnalysisFailure, runSwingAnalysis } from '@/services/analysis/run-swing-analysis';
 
-export async function POST(request: Request) {
-  let sessionId: string | null = null;
-  let failedStage: SwingSessionPipelineStage = 'uploaded';
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ sessionId: string }> }
+) {
+  const { sessionId } = await params;
 
   try {
     const body = await request.json();
-    const parsed = swingAnalysisRequestSchema.parse(body);
-    sessionId = parsed.sessionId;
-    const session = await readSession(parsed.sessionId);
+    const parsed = swingAnalysisRequestSchema.parse({
+      ...body,
+      sessionId
+    });
+    const session = await readSession(sessionId);
 
     if (!session) {
       throw new Error('Session not found.');
@@ -26,18 +29,14 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    const session = await readSession(sessionId);
 
-    if (sessionId) {
-      const session = await readSession(sessionId);
-
-      if (session) {
-        failedStage = session.pipeline.currentStage;
-        await markSwingAnalysisFailure({
-          session,
-          stage: failedStage,
-          error: message
-        });
-      }
+    if (session) {
+      await markSwingAnalysisFailure({
+        session,
+        stage: session.pipeline.currentStage,
+        error: message
+      });
     }
 
     return NextResponse.json({ error: message }, { status: 400 });

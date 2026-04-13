@@ -9,6 +9,19 @@ function sessionPath(sessionId: string) {
   return path.join(sessionsRoot, `${sessionId}.json`);
 }
 
+function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord {
+  return {
+    ...record,
+    pipeline: {
+      currentStage: record.pipeline?.currentStage || (record.status === 'complete' ? 'complete' : record.status === 'failed' ? 'failed' : 'uploaded'),
+      failedStage: record.pipeline?.failedStage || null,
+      poseEstimation: record.pipeline?.poseEstimation || null,
+      phases: record.pipeline?.phases || null,
+      mediaArtifacts: record.pipeline?.mediaArtifacts || null
+    }
+  };
+}
+
 export function toUploadedSwingSession(session: SwingSessionRecord): UploadedSwingSession {
   return {
     id: session.id,
@@ -31,6 +44,8 @@ export async function createUploadedSession(upload: StoredUpload): Promise<Swing
     notes: '',
     playerContext: null,
     pipeline: {
+      currentStage: 'uploaded',
+      failedStage: null,
       poseEstimation: null,
       phases: null,
       mediaArtifacts: null
@@ -59,7 +74,7 @@ export async function writeSession(session: SwingSessionRecord) {
 export async function readSession(sessionId: string): Promise<SwingSessionRecord | null> {
   try {
     const data = await readFile(sessionPath(sessionId), 'utf8');
-    return JSON.parse(data) as SwingSessionRecord;
+    return normalizeSessionRecord(JSON.parse(data) as SwingSessionRecord);
   } catch {
     return null;
   }
@@ -73,7 +88,7 @@ export async function listSessions(): Promise<SwingSessionRecord[]> {
       .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
       .map(async (entry) => {
         const data = await readFile(path.join(sessionsRoot, entry.name), 'utf8');
-        return JSON.parse(data) as SwingSessionRecord;
+        return normalizeSessionRecord(JSON.parse(data) as SwingSessionRecord);
       })
   );
 
