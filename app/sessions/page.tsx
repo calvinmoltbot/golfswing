@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import Link from 'next/link';
+import { ClearSessionsButton, DeleteSessionButton } from '@/components/session-actions';
 import { listSessions } from '@/lib/storage/sessions';
 
 function formatBytes(sizeBytes: number) {
@@ -28,6 +29,7 @@ export default async function SessionsPage() {
             Uploaded sessions persisted on the local filesystem for development. New uploads appear here immediately.
           </p>
         </div>
+        <ClearSessionsButton />
       </section>
 
       {sessions.length === 0 ? (
@@ -67,6 +69,7 @@ export default async function SessionsPage() {
                     <div>{session.status}</div>
                   </div>
                 </div>
+                <DeleteSessionButton sessionId={session.id} />
                 {session.analysis ? (
                   <div className="card inset">
                     {session.pipeline.mediaArtifacts?.poster ? (

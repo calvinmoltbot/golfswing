@@ -37,10 +37,10 @@ export function createFfmpegMediaArtifactProvider(): MediaArtifactProvider {
       const posterPath = path.join(sessionArtifactRoot, posterFileName);
       await runFfmpeg([
         '-y',
-        '-ss',
-        '0.2',
         '-i',
         videoPath,
+        '-ss',
+        '0.2',
         '-frames:v',
         '1',
         '-q:v',
@@ -57,10 +57,10 @@ export function createFfmpegMediaArtifactProvider(): MediaArtifactProvider {
 
         await runFfmpeg([
           '-y',
-          '-ss',
-          seconds,
           '-i',
           videoPath,
+          '-ss',
+          seconds,
           '-frames:v',
           '1',
           '-q:v',

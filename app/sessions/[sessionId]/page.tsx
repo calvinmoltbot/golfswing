@@ -1,13 +1,68 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ReanalyzeButton } from '@/components/reanalyze-button';
+import { DeleteSessionButton } from '@/components/session-actions';
 import { readSession } from '@/lib/storage/sessions';
+import type { PoseMetrics, SwingPhaseDetection } from '@/types/analysis';
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('en-GB', {
     dateStyle: 'medium',
     timeStyle: 'short'
   }).format(new Date(value));
+}
+
+function formatSeconds(timestampMs: number) {
+  return `${(timestampMs / 1000).toFixed(2)}s`;
+}
+
+function MetricCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="card inset">
+      <div className="muted">{label}</div>
+      <div>{value}</div>
+    </div>
+  );
+}
+
+function PoseMetricsSection({ metrics }: { metrics: PoseMetrics }) {
+  return (
+    <>
+      <div className="grid grid-3">
+        <MetricCard label="FPS" value={metrics.fps} />
+        <MetricCard label="Duration" value={formatSeconds(metrics.durationMs)} />
+        <MetricCard label="Tempo ratio" value={metrics.measurements.tempoRatio.toFixed(1)} />
+        <MetricCard label="Head drift" value={`${metrics.measurements.headDriftPx}px`} />
+        <MetricCard label="Pelvis shift" value={`${metrics.measurements.pelvisShiftPx}px`} />
+        <MetricCard label="Shaft lean" value={`${metrics.measurements.shaftLeanAtImpactDeg}°`} />
+        <MetricCard label="Shoulder turn" value={`${metrics.measurements.shoulderTurnDeg}°`} />
+        <MetricCard label="Hip turn" value={`${metrics.measurements.hipTurnDeg}°`} />
+        <MetricCard label="Lead knee flex" value={`${metrics.measurements.leadKneeFlexChangeDeg}°`} />
+      </div>
+    </>
+  );
+}
+
+function PhaseList({ phases }: { phases: SwingPhaseDetection }) {
+  const orderedPhases = [
+    ['Address', phases.addressMs],
+    ['Takeaway', phases.takeawayMs],
+    ['Top', phases.topMs],
+    ['Transition', phases.transitionMs],
+    ['Impact', phases.impactMs],
+    ['Finish', phases.finishMs]
+  ] as const;
+
+  return (
+    <div className="grid">
+      {orderedPhases.map(([label, value]) => (
+        <div key={label} className="row-between">
+          <span className="muted">{label}</span>
+          <span>{formatSeconds(value)}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default async function SessionDetailsPage({
@@ -44,22 +99,10 @@ export default async function SessionDetailsPage({
         <article className="card grid" style={{ gap: 12 }}>
           <h2 style={{ margin: 0 }}>Session metadata</h2>
           <div className="grid grid-2">
-            <div className="card inset">
-              <div className="muted">Video path</div>
-              <div className="code break">{session.file.absolutePath}</div>
-            </div>
-            <div className="card inset">
-              <div className="muted">Updated</div>
-              <div>{formatDate(session.updatedAt)}</div>
-            </div>
-            <div className="card inset">
-              <div className="muted">Camera view</div>
-              <div>{session.playerContext?.cameraView || 'Not set'}</div>
-            </div>
-            <div className="card inset">
-              <div className="muted">Club</div>
-              <div>{session.playerContext?.club || 'Not set'}</div>
-            </div>
+            <MetricCard label="Updated" value={formatDate(session.updatedAt)} />
+            <MetricCard label="Camera view" value={session.playerContext?.cameraView || 'Not set'} />
+            <MetricCard label="Club" value={session.playerContext?.club || 'Not set'} />
+            <MetricCard label="Clip size" value={`${(session.file.sizeBytes / (1024 * 1024)).toFixed(2)} MB`} />
           </div>
           <div className="card inset">
             <div className="muted">Notes</div>
@@ -70,6 +113,7 @@ export default async function SessionDetailsPage({
             initialNotes={session.notes}
             initialPlayerContext={session.playerContext}
           />
+          <DeleteSessionButton sessionId={session.id} />
         </article>
 
         <article className="card grid" style={{ gap: 12 }}>
@@ -103,26 +147,13 @@ export default async function SessionDetailsPage({
           {session.pipeline.poseEstimation ? (
             <>
               <div className="grid grid-3">
-                <div className="card inset">
-                  <div className="muted">Provider</div>
-                  <div>{session.pipeline.poseEstimation.provider.id}</div>
-                </div>
-                <div className="card inset">
-                  <div className="muted">Version</div>
-                  <div>{session.pipeline.poseEstimation.provider.version}</div>
-                </div>
-                <div className="card inset">
-                  <div className="muted">Frames</div>
-                  <div>{session.pipeline.poseEstimation.keypointFrames.length}</div>
-                </div>
+                <MetricCard label="Provider" value={session.pipeline.poseEstimation.provider.id} />
+                <MetricCard label="Version" value={session.pipeline.poseEstimation.provider.version} />
+                <MetricCard label="Frames" value={session.pipeline.poseEstimation.keypointFrames.length} />
               </div>
               <div className="card inset">
                 <div className="muted">Metrics</div>
-                <pre className="code prewrap">{JSON.stringify(session.pipeline.poseEstimation.metrics, null, 2)}</pre>
-              </div>
-              <div className="card inset">
-                <div className="muted">Keypoints</div>
-                <pre className="code prewrap">{JSON.stringify(session.pipeline.poseEstimation.keypointFrames, null, 2)}</pre>
+                <PoseMetricsSection metrics={session.pipeline.poseEstimation.metrics} />
               </div>
             </>
           ) : (
@@ -136,7 +167,7 @@ export default async function SessionDetailsPage({
           <h2 style={{ margin: 0 }}>Phase detection</h2>
           {session.pipeline.phases ? (
             <div className="card inset">
-              <pre className="code prewrap">{JSON.stringify(session.pipeline.phases, null, 2)}</pre>
+              <PhaseList phases={session.pipeline.phases} />
             </div>
           ) : (
             <div className="card inset">

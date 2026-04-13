@@ -1,4 +1,4 @@
-import { readFile, readdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ensureLocalStorage, type StoredUpload } from '@/lib/storage/uploads';
 import type { SwingSessionRecord, UploadedSwingSession } from '@/types/session';
@@ -93,4 +93,25 @@ export async function listSessions(): Promise<SwingSessionRecord[]> {
   );
 
   return sessions.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
+export async function deleteSession(sessionId: string): Promise<boolean> {
+  const session = await readSession(sessionId);
+
+  if (!session) {
+    return false;
+  }
+
+  await Promise.allSettled([
+    unlink(session.file.absolutePath),
+    rm(path.join(process.cwd(), 'data', 'artifacts', sessionId), { recursive: true, force: true }),
+    rm(sessionPath(sessionId), { force: true })
+  ]);
+
+  return true;
+}
+
+export async function deleteAllSessions() {
+  const sessions = await listSessions();
+  await Promise.all(sessions.map((session) => deleteSession(session.id)));
 }

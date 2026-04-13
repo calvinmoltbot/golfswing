@@ -4,6 +4,34 @@ import { useState } from 'react';
 import type { SwingAnalysisRequest, SwingAnalysisResponse } from '@/types/analysis';
 import type { UploadedSwingSession } from '@/types/session';
 
+const clubOptions = [
+  'Driver',
+  '3-wood',
+  '5-wood',
+  '3-hybrid',
+  '4-hybrid',
+  '3-iron',
+  '4-iron',
+  '5-iron',
+  '6-iron',
+  '7-iron',
+  '8-iron',
+  '9-iron',
+  'Pitching wedge',
+  'Gap wedge',
+  'Sand wedge',
+  'Lob wedge'
+] as const;
+
+const phaseLabels: Record<keyof SwingAnalysisResponse['phaseObservations'], string> = {
+  address: 'Address',
+  backswing: 'Backswing',
+  top: 'Top',
+  transition: 'Transition',
+  impact: 'Impact',
+  finish: 'Finish'
+};
+
 export function UploadForm() {
   const [notes, setNotes] = useState('');
   const [playerContext, setPlayerContext] = useState<SwingAnalysisRequest['playerContext']>({
@@ -110,12 +138,17 @@ export function UploadForm() {
           </label>
           <label>
             <div style={{ marginBottom: 6 }}>Club</div>
-            <input
+            <select
               className="input"
               value={playerContext.club}
               onChange={(event) => setPlayerContext((current) => ({ ...current, club: event.target.value }))}
-              placeholder="7-iron"
-            />
+            >
+              {clubOptions.map((club) => (
+                <option key={club} value={club}>
+                  {club}
+                </option>
+              ))}
+            </select>
           </label>
         </div>
         <label>
@@ -145,7 +178,7 @@ export function UploadForm() {
       ) : null}
 
       {result ? (
-        <div className="grid grid-2">
+        <div className="grid grid-4">
           <div className="card">
             <h3>Summary</h3>
             <p>{result.summary}</p>
@@ -161,9 +194,16 @@ export function UploadForm() {
           </div>
           <div className="card">
             <h3>Phase observations</h3>
-            <pre className="code" style={{ whiteSpace: 'pre-wrap' }}>
-              {JSON.stringify(result.phaseObservations, null, 2)}
-            </pre>
+            <div className="grid" style={{ gap: 10 }}>
+              {Object.entries(result.phaseObservations).map(([phase, observation]) => (
+                <div key={phase} className="row-between start">
+                  <strong>{phaseLabels[phase as keyof typeof phaseLabels]}</strong>
+                  <div className="muted align-right" style={{ maxWidth: 360 }}>
+                    {observation}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="card">
             <h3>Drills</h3>

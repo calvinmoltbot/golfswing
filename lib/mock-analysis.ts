@@ -56,7 +56,7 @@ export function buildMockSwingAnalysis({
     confidence: 'medium',
     priorityFixes,
     phaseObservations: {
-      address: `Setup is stable at ${formatPhaseTime(phases.addressMs)} with manageable head movement and a neutral starting alignments.`,
+      address: `Setup is stable at ${formatPhaseTime(phases.addressMs)} with manageable head movement and a neutral starting position.`,
       backswing: `Backswing pace remains functional through ${formatPhaseTime(phases.topMs)}, with ${metrics.measurements.shoulderTurnDeg} degrees of shoulder turn.`,
       top: 'At the top, the turn depth looks adequate, but the body needs to stay organized before unwinding.',
       transition: `Transition begins around ${formatPhaseTime(phases.transitionMs)} and shows ${metrics.measurements.pelvisShiftPx}px of pelvis shift, which can push the downswing forward too early.`,
