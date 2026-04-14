@@ -1,5 +1,6 @@
 import type { SessionRepository, StoredUpload } from '@/lib/storage/contracts';
 import { localSessionRepository } from '@/lib/storage/local/session-repository';
+import { neonSessionRepository } from '@/lib/storage/neon/session-repository';
 import type { SwingSessionRecord, UploadedSwingSession } from '@/types/session';
 
 function resolveSessionRepository(): SessionRepository {
@@ -8,6 +9,8 @@ function resolveSessionRepository(): SessionRepository {
   switch (provider) {
     case 'local':
       return localSessionRepository;
+    case 'neon':
+      return neonSessionRepository;
     default:
       throw new Error(`Unsupported session repository provider: ${provider}`);
   }

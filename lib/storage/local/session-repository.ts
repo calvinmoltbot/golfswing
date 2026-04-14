@@ -1,8 +1,13 @@
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { ensureLocalStorage, localUploadStorage } from '@/lib/storage/local/upload-storage';
+import {
+  createSessionRecordFromUpload,
+  normalizeSessionRecord,
+  toUploadedSwingSession
+} from '@/lib/storage/session-record';
 import type { SessionRepository, StoredUpload } from '@/lib/storage/contracts';
-import type { SwingSessionRecord, UploadedSwingSession } from '@/types/session';
+import type { SwingSessionRecord } from '@/types/session';
 
 const sessionsRoot = path.join(process.cwd(), 'data', 'sessions');
 
@@ -10,72 +15,11 @@ function sessionPath(sessionId: string) {
   return path.join(sessionsRoot, `${sessionId}.json`);
 }
 
-function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord {
-  return {
-    ...record,
-    reportMode: record.reportMode || 'concise',
-    playerGoal: record.playerGoal || '',
-    usualMiss: record.usualMiss || '',
-    shotShape: record.shotShape || '',
-    skillBand: record.skillBand || 'intermediate',
-    pipeline: {
-      currentStage:
-        record.pipeline?.currentStage ||
-        (record.status === 'complete' ? 'complete' : record.status === 'failed' ? 'failed' : 'uploaded'),
-      failedStage: record.pipeline?.failedStage || null,
-      poseEstimation: record.pipeline?.poseEstimation || null,
-      phases: record.pipeline?.phases || null,
-      mediaArtifacts: record.pipeline?.mediaArtifacts || null,
-      coachingAnalysis: record.pipeline?.coachingAnalysis || null
-    }
-  };
-}
-
-function toUploadedSwingSession(session: SwingSessionRecord): UploadedSwingSession {
-  return {
-    id: session.id,
-    createdAt: session.createdAt,
-    fileName: session.file.originalName,
-    mimeType: session.file.mimeType,
-    sizeBytes: session.file.sizeBytes,
-    status: session.status
-  };
-}
-
 export const localSessionRepository: SessionRepository = {
   async createFromUpload(upload: StoredUpload): Promise<SwingSessionRecord> {
     await ensureLocalStorage();
 
-    const session: SwingSessionRecord = {
-      id: upload.sessionId,
-      createdAt: upload.createdAt,
-      updatedAt: upload.createdAt,
-      status: 'uploaded',
-      notes: '',
-      playerContext: null,
-      reportMode: 'concise',
-      playerGoal: '',
-      usualMiss: '',
-      shotShape: '',
-      skillBand: 'intermediate',
-      pipeline: {
-        currentStage: 'uploaded',
-        failedStage: null,
-        poseEstimation: null,
-        phases: null,
-        mediaArtifacts: null,
-        coachingAnalysis: null
-      },
-      analysis: null,
-      error: null,
-      file: {
-        absolutePath: upload.absolutePath,
-        storedName: upload.storedName,
-        originalName: upload.originalName,
-        mimeType: upload.mimeType,
-        sizeBytes: upload.sizeBytes
-      }
-    };
+    const session = createSessionRecordFromUpload(upload);
 
     await this.save(session);
     return session;

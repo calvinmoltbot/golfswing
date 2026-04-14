@@ -92,6 +92,15 @@ Likely shape:
 - JSON columns for pipeline state and analysis payloads initially
 - evolve toward normalized tables only if necessary later
 
+Current implementation status:
+
+- `lib/storage/neon/session-repository.ts` adds the first Neon adapter
+- `db/neon/001_create_swing_sessions.sql` defines the initial table
+- runtime can opt into it with `SESSION_REPOSITORY_PROVIDER=neon`
+- `DATABASE_URL` or `NEON_DATABASE_URL` is required when the Neon adapter is selected
+
+This still keeps uploads and artifacts on local disk, so it is only a partial production step.
+
 ### Phase 3 — artifact storage adapter
 
 Refactor media artifact handling so ffmpeg outputs can be:
@@ -139,6 +148,7 @@ Then:
 
 - `UPLOAD_STORAGE_PROVIDER=s3`
 - `SESSION_REPOSITORY_PROVIDER=neon`
+- `DATABASE_URL=postgres://...`
 
 Future:
 
