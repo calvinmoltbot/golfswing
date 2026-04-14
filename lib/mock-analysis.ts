@@ -4,6 +4,28 @@ function formatPhaseTime(timestampMs: number) {
   return `${(timestampMs / 1000).toFixed(2)}s`;
 }
 
+function deriveClubCategory(club: string): 'driver' | 'fairway' | 'hybrid' | 'iron' | 'wedge' {
+  const normalized = club.toLowerCase();
+
+  if (normalized.includes('driver')) {
+    return 'driver';
+  }
+
+  if (normalized.includes('wood')) {
+    return 'fairway';
+  }
+
+  if (normalized.includes('hybrid')) {
+    return 'hybrid';
+  }
+
+  if (normalized.includes('wedge')) {
+    return 'wedge';
+  }
+
+  return 'iron';
+}
+
 export function buildMockSwingAnalysis({
   request,
   metrics,
@@ -15,30 +37,61 @@ export function buildMockSwingAnalysis({
 }): SwingAnalysisResponse {
   const priorityFixes: SwingAnalysisResponse['priorityFixes'] = [];
   const drills: SwingAnalysisResponse['drills'] = [];
+  const clubCategory = deriveClubCategory(request.playerContext.club);
+  const isFaceOn = request.playerContext.cameraView === 'face-on';
+
+  const clubPriorityLabel =
+    clubCategory === 'driver'
+      ? 'tee-shot launch and speed delivery'
+      : clubCategory === 'wedge'
+        ? 'distance control and low-point precision'
+        : clubCategory === 'fairway'
+          ? 'centered contact from the turf'
+          : clubCategory === 'hybrid'
+            ? 'stable strike with enough shaft control'
+            : 'compressed iron contact';
+  const viewPriorityLabel = isFaceOn ? 'centered pressure shift' : 'delivery geometry';
 
   if (metrics.measurements.pelvisShiftPx > 20) {
     priorityFixes.push({
       title: 'Reduce lateral slide in transition',
-      detail: 'Keep the pelvis from shifting excessively toward the target so rotation can continue through impact.',
-      evidence: `Transition shows ${metrics.measurements.pelvisShiftPx}px of pelvis shift around ${formatPhaseTime(phases.transitionMs)}.`
+      detail: isFaceOn
+        ? 'Keep the pelvis and sternum more centered in transition so pressure shift does not turn into a visible sway.'
+        : 'Keep the pelvis from shifting excessively toward the target so rotation can continue through impact.',
+      evidence: `Transition shows ${metrics.measurements.pelvisShiftPx}px of pelvis shift around ${formatPhaseTime(phases.transitionMs)} from the ${isFaceOn ? 'face-on' : 'down-the-line'} view.`
     });
     drills.push({
-      name: 'Step-through transition drill',
-      reason: 'Helps sequence pressure shift without letting the pelvis outrun rotation.',
-      checkpoint: 'Film three swings and look for less hip slide before impact.'
+      name: isFaceOn ? 'Centered pivot rehearsal' : 'Step-through transition drill',
+      reason: isFaceOn
+        ? 'Helps the player feel pressure shift without swaying away from center.'
+        : 'Helps sequence pressure shift without letting the pelvis outrun rotation.',
+      checkpoint: isFaceOn
+        ? 'Film three face-on swings and look for the belt buckle staying more centered.'
+        : 'Film three swings and look for less hip slide before impact.'
     });
   }
 
   if (metrics.measurements.shaftLeanAtImpactDeg < 10) {
     priorityFixes.push({
       title: 'Improve forward shaft lean at impact',
-      detail: 'Deliver the handle slightly more forward so strike quality and compression improve.',
-      evidence: `Impact is measured at ${metrics.measurements.shaftLeanAtImpactDeg}° of shaft lean near ${formatPhaseTime(phases.impactMs)}.`
+      detail:
+        clubCategory === 'wedge'
+          ? 'Deliver the handle slightly more forward so low point and distance control improve.'
+          : clubCategory === 'driver'
+            ? 'Improve delivered handle position without forcing a steep, wedge-like strike pattern.'
+            : 'Deliver the handle slightly more forward so strike quality and compression improve.',
+      evidence: `Impact is measured at ${metrics.measurements.shaftLeanAtImpactDeg}° of shaft lean near ${formatPhaseTime(phases.impactMs)} with a ${request.playerContext.club}.`
     });
     drills.push({
-      name: 'Impact bag preset',
-      reason: 'Builds awareness of handle-forward delivery and pressure into the lead side.',
-      checkpoint: 'At setup rehearsals, keep the hands clearly ahead of the clubhead through impact.'
+      name: clubCategory === 'driver' ? 'Tee-height delivery rehearsal' : 'Impact bag preset',
+      reason:
+        clubCategory === 'driver'
+          ? 'Builds a better delivery pattern for driver without overdoing downward strike feels.'
+          : 'Builds awareness of handle-forward delivery and pressure into the lead side.',
+      checkpoint:
+        clubCategory === 'driver'
+          ? 'Rehearse driver impact with pressure moving forward and the chest still opening.'
+          : 'At setup rehearsals, keep the hands clearly ahead of the clubhead through impact.'
     });
   }
 
@@ -46,7 +99,7 @@ export function buildMockSwingAnalysis({
     priorityFixes.push({
       title: 'Smooth the overall tempo',
       detail: 'Reduce the abrupt change from backswing to downswing so the motion stays easier to repeat.',
-      evidence: `Tempo ratio is ${metrics.measurements.tempoRatio.toFixed(1)}, which suggests the transition is getting quick.`
+      evidence: `Tempo ratio is ${metrics.measurements.tempoRatio.toFixed(1)}, which suggests the transition is getting quick for a ${request.playerContext.club} swing.`
     });
     drills.push({
       name: 'Three-to-one tempo swings',
@@ -76,35 +129,57 @@ export function buildMockSwingAnalysis({
   const skillBandLabel = request.skillBand === 'beginner' ? 'beginner' : request.skillBand === 'advanced' ? 'advanced' : 'intermediate';
 
   return {
-    summary: `${viewLabel} mock analysis for a ${skillBandLabel} player hitting ${request.playerContext.club}. The biggest gains appear to come from transition control and cleaner impact alignments.${notesSuffix}${goalSuffix}${missSuffix}${shotShapeSuffix}`,
+    summary: `${viewLabel} mock analysis for a ${skillBandLabel} player hitting ${request.playerContext.club}. The biggest gains appear to come from ${viewPriorityLabel} and better ${clubPriorityLabel}.${notesSuffix}${goalSuffix}${missSuffix}${shotShapeSuffix}`,
     confidence: 'medium',
     primaryFinding: {
-      title: 'Transition is the main coaching priority',
+      title: isFaceOn ? 'Centered transition is the main coaching priority' : 'Delivery and transition are the main coaching priority',
       detail: request.usualMiss
         ? `The current motion suggests that transition control may be contributing to the player's usual miss of ${request.usualMiss.trim()}.`
-        : 'The swing has enough turn to be playable, but excessive forward motion and modest impact alignments limit strike quality.',
+        : isFaceOn
+          ? 'The face-on view suggests that centered pressure shift and body control need attention before speed can be added.'
+          : 'The down-the-line view suggests that delivery geometry and transition organization need attention before strike can improve.',
       impact: request.shotShape
         ? `If this pattern persists, it may exaggerate the player's typical ${request.shotShape.trim()} pattern and make contact less predictable.`
-        : 'This pattern is likely to make contact and start direction less reliable, especially under speed.',
+        : clubCategory === 'driver'
+          ? 'This pattern is likely to make tee-shot start direction and strike location less reliable at speed.'
+          : clubCategory === 'wedge'
+            ? 'This pattern is likely to make low point and distance control less reliable.'
+            : 'This pattern is likely to make contact and start direction less reliable, especially under speed.',
       confidence: 'medium'
     },
     measurableCheckpoint: {
-      label: 'Pelvis shift before impact',
+      label: isFaceOn ? 'Centered body motion before impact' : 'Delivery shape into impact',
       target: request.playerGoal
         ? `Rehearse swings that support the goal of ${request.playerGoal.trim()} while reducing visible slide before impact.`
-        : 'Reduce visible slide before impact and keep rotation moving through the strike.',
+        : isFaceOn
+          ? 'Keep the torso and pelvis more centered through transition while the chest keeps rotating.'
+          : 'Keep the handle and body rotating together so delivery looks more organized into impact.',
       whyItMatters: request.usualMiss
         ? `Better sequencing should help reduce the player's usual miss of ${request.usualMiss.trim()}.`
         : 'Better sequencing should improve contact quality and make face delivery easier to repeat.'
     },
     priorityFixes,
     phaseObservations: {
-      address: `Setup is stable at ${formatPhaseTime(phases.addressMs)} with manageable head movement and a neutral starting position.`,
-      backswing: `Backswing pace remains functional through ${formatPhaseTime(phases.topMs)}, with ${metrics.measurements.shoulderTurnDeg} degrees of shoulder turn.`,
-      top: 'At the top, the turn depth looks adequate, but the body needs to stay organized before unwinding.',
-      transition: `Transition begins around ${formatPhaseTime(phases.transitionMs)} and shows ${metrics.measurements.pelvisShiftPx}px of pelvis shift, which can push the downswing forward too early.`,
-      impact: `Impact arrives near ${formatPhaseTime(phases.impactMs)} with ${metrics.measurements.shaftLeanAtImpactDeg} degrees of shaft lean, leaving room for a stronger strike pattern.`,
-      finish: `The finish reaches ${formatPhaseTime(phases.finishMs)} and suggests the motion can stay balanced when the sequencing is cleaner earlier in the swing.`
+      address: isFaceOn
+        ? `From face-on, setup looks stable at ${formatPhaseTime(phases.addressMs)} with manageable head movement and a centered starting position.`
+        : `From down-the-line, setup looks organized at ${formatPhaseTime(phases.addressMs)} with a neutral starting delivery picture.`,
+      backswing: isFaceOn
+        ? `Backswing pace remains functional through ${formatPhaseTime(phases.topMs)}, with ${metrics.measurements.shoulderTurnDeg} degrees of shoulder turn and a pressure shift that still needs to stay centered.`
+        : `Backswing pace remains functional through ${formatPhaseTime(phases.topMs)}, with ${metrics.measurements.shoulderTurnDeg} degrees of shoulder turn and room for cleaner hand-path depth.`,
+      top: isFaceOn
+        ? 'At the top, the body has enough turn, but the next priority is staying centered before the downswing starts.'
+        : 'At the top, the turn depth is usable, but the delivery needs to stay more organized before the club unwinds.',
+      transition: isFaceOn
+        ? `Transition begins around ${formatPhaseTime(phases.transitionMs)} and shows ${metrics.measurements.pelvisShiftPx}px of body shift, which can move pressure too far too early.`
+        : `Transition begins around ${formatPhaseTime(phases.transitionMs)} and shows ${metrics.measurements.pelvisShiftPx}px of pelvis shift, which can distort the delivery pattern into impact.`,
+      impact: clubCategory === 'driver'
+        ? `Impact arrives near ${formatPhaseTime(phases.impactMs)} with ${metrics.measurements.shaftLeanAtImpactDeg} degrees of shaft lean, so driver delivery should improve through better rotation rather than a forced downward strike feel.`
+        : clubCategory === 'wedge'
+          ? `Impact arrives near ${formatPhaseTime(phases.impactMs)} with ${metrics.measurements.shaftLeanAtImpactDeg} degrees of shaft lean, leaving room for tighter low-point and distance control.`
+          : `Impact arrives near ${formatPhaseTime(phases.impactMs)} with ${metrics.measurements.shaftLeanAtImpactDeg} degrees of shaft lean, leaving room for a stronger strike pattern.`,
+      finish: isFaceOn
+        ? `The finish reaches ${formatPhaseTime(phases.finishMs)} and suggests the swing can stay balanced if the centered pivot improves earlier.`
+        : `The finish reaches ${formatPhaseTime(phases.finishMs)} and suggests the motion can stay balanced when delivery is cleaner earlier in the swing.`
     },
     drills,
     warnings: ['Mock analysis only. Replace with model-backed coaching before using for real instruction.']

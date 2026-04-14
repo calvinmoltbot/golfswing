@@ -1,6 +1,28 @@
 import type { ChatMessage } from '@/lib/openrouter';
 import type { PoseMetrics, SwingAnalysisRequest, SwingPhaseDetection } from '@/types/analysis';
 
+function deriveClubCategory(club: string): 'driver' | 'fairway' | 'hybrid' | 'iron' | 'wedge' {
+  const normalized = club.toLowerCase();
+
+  if (normalized.includes('driver')) {
+    return 'driver';
+  }
+
+  if (normalized.includes('wood')) {
+    return 'fairway';
+  }
+
+  if (normalized.includes('hybrid')) {
+    return 'hybrid';
+  }
+
+  if (normalized.includes('wedge')) {
+    return 'wedge';
+  }
+
+  return 'iron';
+}
+
 function deriveEvidenceQuality(metrics: PoseMetrics): 'low' | 'medium' | 'high' {
   const signals = [
     metrics.measurements.headDriftPx > 0,
@@ -32,10 +54,25 @@ export function buildSwingAnalysisMessages({
   phases: SwingPhaseDetection;
 }): ChatMessage[] {
   const evidenceQuality = deriveEvidenceQuality(metrics);
+  const clubCategory = deriveClubCategory(request.playerContext.club);
   const reportModeGuidance =
     request.reportMode === 'full'
       ? 'Use fuller explanations. Summary and primary finding detail may use up to 3 sentences each.'
       : 'Be concise. Summary and primary finding detail should stay to 1-2 sentences each.';
+  const cameraViewGuidance =
+    request.playerContext.cameraView === 'face-on'
+      ? 'Prioritize pressure shift, sway, centered turn, and low-point or contact implications that are visible from face-on.'
+      : 'Prioritize delivery, hand path, rotation depth, and strike-pattern implications that are visible from down-the-line.';
+  const clubGuidance =
+    clubCategory === 'driver'
+      ? 'Bias the analysis toward tee-shot launch, face delivery, and speed-friendly sequencing. Do not over-focus on wedge-style shaft lean.'
+      : clubCategory === 'fairway'
+        ? 'Balance speed and strike. Fairway woods need centered contact and stable low point as much as speed.'
+        : clubCategory === 'hybrid'
+          ? 'Hybrid feedback should balance descending strike, face delivery, and stability through transition.'
+          : clubCategory === 'wedge'
+            ? 'Bias the analysis toward strike control, low point, and delivered loft. Wedge feedback should emphasize precision over speed.'
+            : 'Iron feedback should emphasize strike quality, low point, compression, and face-to-path control.';
 
   const system = `You are a golf swing analysis assistant. You are given swing context, extracted swing metrics, and phase timings.
 Return strict JSON only with this shape:
@@ -82,11 +119,14 @@ If evidence quality is medium, balance caution with specificity.
 If evidence quality is high, you can be more direct, but still tie claims to evidence.
 Use player goal, usual miss, shot shape, and skill band to prioritize advice when those fields are present.
 If the player's stated miss or goal conflicts with the raw evidence, acknowledge the uncertainty instead of forcing a false match.
+${cameraViewGuidance}
+${clubGuidance}
 ${reportModeGuidance}`;
 
   const user = JSON.stringify(
     {
       request,
+      clubCategory,
       evidenceQuality,
       metrics,
       phases
