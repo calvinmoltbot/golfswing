@@ -125,10 +125,40 @@ export default async function SessionDetailsPage({
                 <p style={{ marginBottom: 0 }}>{session.analysis.summary}</p>
               </div>
               <div className="card inset">
+                <div className="muted">Primary finding</div>
+                <p style={{ marginBottom: 8 }}>
+                  <strong>{session.analysis.primaryFinding.title}</strong>
+                </p>
+                <p style={{ margin: '0 0 8px' }}>{session.analysis.primaryFinding.detail}</p>
+                <p className="muted" style={{ margin: 0 }}>{session.analysis.primaryFinding.impact}</p>
+              </div>
+              <div className="card inset">
                 <div className="muted">Priority fixes</div>
                 <ul>
                   {session.analysis.priorityFixes.map((item) => (
-                    <li key={item}>{item}</li>
+                    <li key={item.title}>
+                      <strong>{item.title}:</strong> {item.detail}
+                      <div className="muted" style={{ marginTop: 4 }}>{item.evidence}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="card inset">
+                <div className="muted">Measurable checkpoint</div>
+                <p style={{ marginBottom: 8 }}>
+                  <strong>{session.analysis.measurableCheckpoint.label}</strong>
+                </p>
+                <p style={{ margin: '0 0 8px' }}>{session.analysis.measurableCheckpoint.target}</p>
+                <p className="muted" style={{ margin: 0 }}>{session.analysis.measurableCheckpoint.whyItMatters}</p>
+              </div>
+              <div className="card inset">
+                <div className="muted">Drills</div>
+                <ul>
+                  {session.analysis.drills.map((item) => (
+                    <li key={item.name}>
+                      <strong>{item.name}:</strong> {item.reason}
+                      <div className="muted" style={{ marginTop: 4 }}>Checkpoint: {item.checkpoint}</div>
+                    </li>
                   ))}
                 </ul>
               </div>

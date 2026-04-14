@@ -73,7 +73,24 @@ export type SwingPhaseDetection = {
 export const swingAnalysisResponseSchema = z.object({
   summary: z.string().min(1),
   confidence: z.enum(['low', 'medium', 'high']),
-  priorityFixes: z.array(z.string().min(1)),
+  primaryFinding: z.object({
+    title: z.string().min(1),
+    detail: z.string().min(1),
+    impact: z.string().min(1),
+    confidence: z.enum(['low', 'medium', 'high'])
+  }),
+  measurableCheckpoint: z.object({
+    label: z.string().min(1),
+    target: z.string().min(1),
+    whyItMatters: z.string().min(1)
+  }),
+  priorityFixes: z.array(
+    z.object({
+      title: z.string().min(1),
+      detail: z.string().min(1),
+      evidence: z.string().min(1)
+    })
+  ),
   phaseObservations: z.object({
     address: z.string().min(1),
     backswing: z.string().min(1),
@@ -85,7 +102,8 @@ export const swingAnalysisResponseSchema = z.object({
   drills: z.array(
     z.object({
       name: z.string().min(1),
-      reason: z.string().min(1)
+      reason: z.string().min(1),
+      checkpoint: z.string().min(1)
     })
   ),
   warnings: z.array(z.string())

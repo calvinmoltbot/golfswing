@@ -183,12 +183,23 @@ export function UploadForm() {
             <h3>Summary</h3>
             <p>{result.summary}</p>
             <p className="muted">Confidence: {result.confidence}</p>
+            <div className="card inset" style={{ marginTop: 12 }}>
+              <div className="muted">Primary finding</div>
+              <p style={{ marginBottom: 8 }}>
+                <strong>{result.primaryFinding.title}</strong>
+              </p>
+              <p style={{ margin: '0 0 8px' }}>{result.primaryFinding.detail}</p>
+              <p className="muted" style={{ margin: 0 }}>{result.primaryFinding.impact}</p>
+            </div>
           </div>
           <div className="card">
             <h3>Priority fixes</h3>
             <ul>
               {result.priorityFixes.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item.title}>
+                  <strong>{item.title}:</strong> {item.detail}
+                  <div className="muted" style={{ marginTop: 4 }}>{item.evidence}</div>
+                </li>
               ))}
             </ul>
           </div>
@@ -211,9 +222,18 @@ export function UploadForm() {
               {result.drills.map((item) => (
                 <li key={item.name}>
                   <strong>{item.name}:</strong> {item.reason}
+                  <div className="muted" style={{ marginTop: 4 }}>Checkpoint: {item.checkpoint}</div>
                 </li>
               ))}
             </ul>
+            <div className="card inset" style={{ marginTop: 12 }}>
+              <div className="muted">Measurable checkpoint</div>
+              <p style={{ marginBottom: 8 }}>
+                <strong>{result.measurableCheckpoint.label}</strong>
+              </p>
+              <p style={{ margin: '0 0 8px' }}>{result.measurableCheckpoint.target}</p>
+              <p className="muted" style={{ margin: 0 }}>{result.measurableCheckpoint.whyItMatters}</p>
+            </div>
           </div>
         </div>
       ) : null}
