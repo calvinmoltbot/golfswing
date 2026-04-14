@@ -33,6 +33,7 @@ export type SwingSessionRecord = {
   status: SwingSessionStatus;
   notes: string;
   playerContext: SwingAnalysisRequest['playerContext'] | null;
+  reportMode: SwingAnalysisRequest['reportMode'];
   pipeline: {
     currentStage: SwingSessionPipelineStage;
     failedStage: SwingSessionPipelineStage | null;

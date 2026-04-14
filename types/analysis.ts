@@ -9,7 +9,8 @@ export const playerContextSchema = z.object({
 export const swingAnalysisRequestSchema = z.object({
   sessionId: z.string().min(1),
   notes: z.string().max(4000).optional().default(''),
-  playerContext: playerContextSchema
+  playerContext: playerContextSchema,
+  reportMode: z.enum(['concise', 'full']).default('concise')
 });
 
 export type SwingAnalysisRequest = z.infer<typeof swingAnalysisRequestSchema>;

@@ -33,6 +33,7 @@ export async function runSwingAnalysis({
     error: null,
     notes: request.notes,
     playerContext: request.playerContext,
+    reportMode: request.reportMode,
     pipeline: {
       ...session.pipeline,
       failedStage: null

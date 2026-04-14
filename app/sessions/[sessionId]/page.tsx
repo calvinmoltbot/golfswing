@@ -102,6 +102,7 @@ export default async function SessionDetailsPage({
             <MetricCard label="Updated" value={formatDate(session.updatedAt)} />
             <MetricCard label="Camera view" value={session.playerContext?.cameraView || 'Not set'} />
             <MetricCard label="Club" value={session.playerContext?.club || 'Not set'} />
+            <MetricCard label="Report mode" value={session.reportMode} />
             <MetricCard label="Clip size" value={`${(session.file.sizeBytes / (1024 * 1024)).toFixed(2)} MB`} />
           </div>
           <div className="card inset">
@@ -112,6 +113,7 @@ export default async function SessionDetailsPage({
             sessionId={session.id}
             initialNotes={session.notes}
             initialPlayerContext={session.playerContext}
+            initialReportMode={session.reportMode}
           />
           <DeleteSessionButton sessionId={session.id} redirectTo="/sessions" />
         </article>

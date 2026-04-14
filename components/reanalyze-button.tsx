@@ -6,11 +6,13 @@ import type { SwingAnalysisRequest, SwingAnalysisResponse } from '@/types/analys
 export function ReanalyzeButton({
   sessionId,
   initialNotes,
-  initialPlayerContext
+  initialPlayerContext,
+  initialReportMode
 }: {
   sessionId: string;
   initialNotes: string;
   initialPlayerContext: SwingAnalysisRequest['playerContext'] | null;
+  initialReportMode: SwingAnalysisRequest['reportMode'];
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +32,8 @@ export function ReanalyzeButton({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           notes: initialNotes,
-          playerContext: initialPlayerContext
+          playerContext: initialPlayerContext,
+          reportMode: initialReportMode
         } satisfies Omit<SwingAnalysisRequest, 'sessionId'>)
       });
 

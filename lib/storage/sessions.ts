@@ -12,6 +12,7 @@ function sessionPath(sessionId: string) {
 function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord {
   return {
     ...record,
+    reportMode: record.reportMode || 'concise',
     pipeline: {
       currentStage: record.pipeline?.currentStage || (record.status === 'complete' ? 'complete' : record.status === 'failed' ? 'failed' : 'uploaded'),
       failedStage: record.pipeline?.failedStage || null,
@@ -44,6 +45,7 @@ export async function createUploadedSession(upload: StoredUpload): Promise<Swing
     status: 'uploaded',
     notes: '',
     playerContext: null,
+    reportMode: 'concise',
     pipeline: {
       currentStage: 'uploaded',
       failedStage: null,

@@ -34,6 +34,7 @@ const phaseLabels: Record<keyof SwingAnalysisResponse['phaseObservations'], stri
 
 export function UploadForm() {
   const [notes, setNotes] = useState('');
+  const [reportMode, setReportMode] = useState<SwingAnalysisRequest['reportMode']>('concise');
   const [playerContext, setPlayerContext] = useState<SwingAnalysisRequest['playerContext']>({
     handedness: 'right',
     cameraView: 'down-the-line',
@@ -74,7 +75,8 @@ export function UploadForm() {
         body: JSON.stringify({
           sessionId: uploadData.session.id,
           notes,
-          playerContext
+          playerContext,
+          reportMode
         } satisfies SwingAnalysisRequest)
       });
 
@@ -92,6 +94,7 @@ export function UploadForm() {
         cameraView: 'down-the-line',
         club: '7-iron'
       });
+      setReportMode('concise');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -151,6 +154,17 @@ export function UploadForm() {
             </select>
           </label>
         </div>
+        <label>
+          <div style={{ marginBottom: 6 }}>Report mode</div>
+          <select
+            className="input"
+            value={reportMode}
+            onChange={(event) => setReportMode(event.target.value as SwingAnalysisRequest['reportMode'])}
+          >
+            <option value="concise">Concise</option>
+            <option value="full">Full</option>
+          </select>
+        </label>
         <label>
           <div style={{ marginBottom: 6 }}>Player notes</div>
           <textarea

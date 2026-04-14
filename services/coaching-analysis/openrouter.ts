@@ -6,6 +6,32 @@ import { swingAnalysisResponseSchema } from '@/types/analysis';
 const DEFAULT_OPENROUTER_MODEL = 'openai/gpt-4.1-mini';
 const OPENROUTER_TIMEOUT_MS = 20_000;
 const OPENROUTER_RETRIES = 2;
+const GENERIC_PHRASES = ['solid swing', 'playable pattern', 'looks good overall', 'keep it up', 'minor tweaks'];
+
+function validateCoachingQuality(response: ReturnType<typeof swingAnalysisResponseSchema.parse>): string | null {
+  const genericHit = GENERIC_PHRASES.find((phrase) => {
+    const haystacks = [
+      response.summary,
+      response.primaryFinding.title,
+      response.primaryFinding.detail,
+      ...Object.values(response.phaseObservations)
+    ];
+
+    return haystacks.some((value) => value.toLowerCase().includes(phrase));
+  });
+
+  if (genericHit) {
+    return `Response contained generic coaching language: "${genericHit}"`;
+  }
+
+  const weakEvidence = response.priorityFixes.find((item) => !/[0-9]/.test(item.evidence) && !/(address|backswing|top|transition|impact|finish|head|pelvis|tempo|shaft|shoulder|hip)/i.test(item.evidence));
+
+  if (weakEvidence) {
+    return `Priority fix "${weakEvidence.title}" did not include concrete evidence.`;
+  }
+
+  return null;
+}
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -69,6 +95,22 @@ export const openRouterCoachingAnalysisProvider: CoachingAnalysisProvider = {
           },
           response: null,
           error: `OpenRouter response failed validation: ${validationError}`
+        };
+      }
+
+      const qualityError = validateCoachingQuality(parsed.data);
+
+      if (qualityError) {
+        return {
+          metadata: {
+            providerId: 'openrouter',
+            model,
+            requestedAt,
+            completedAt: new Date().toISOString(),
+            validationError: qualityError
+          },
+          response: null,
+          error: qualityError
         };
       }
 
