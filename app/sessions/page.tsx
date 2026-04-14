@@ -73,11 +73,13 @@ export default async function SessionsPage() {
                 {session.analysis ? (
                   <div className="card inset">
                     {session.pipeline.mediaArtifacts?.poster ? (
-                      <img
-                        src={session.pipeline.mediaArtifacts.poster.urlPath}
-                        alt={`${session.file.originalName} poster`}
-                        className="artifact-preview"
-                      />
+                      <div className="artifact-surface compact" style={{ marginBottom: 12 }}>
+                        <img
+                          src={session.pipeline.mediaArtifacts.poster.urlPath}
+                          alt={`${session.file.originalName} poster`}
+                          className="artifact-preview"
+                        />
+                      </div>
                     ) : null}
                     <div className="muted" style={{ marginBottom: 8 }}>
                       Latest analysis

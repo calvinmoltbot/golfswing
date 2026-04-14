@@ -240,22 +240,26 @@ export default async function SessionDetailsPage({
             {session.pipeline.mediaArtifacts.poster ? (
               <div className="card inset">
                 <div className="muted" style={{ marginBottom: 8 }}>Poster</div>
-                <img
-                  src={session.pipeline.mediaArtifacts.poster.urlPath}
-                  alt={`${session.file.originalName} poster`}
-                  className="artifact-preview"
-                />
+                <div className="artifact-surface detail">
+                  <img
+                    src={session.pipeline.mediaArtifacts.poster.urlPath}
+                    alt={`${session.file.originalName} poster`}
+                    className="artifact-preview"
+                  />
+                </div>
               </div>
             ) : null}
             <div className="artifact-grid">
               {session.pipeline.mediaArtifacts.keyFrames.map((artifact) => (
                 <div key={artifact.fileName} className="card inset artifact-card">
                   <div className="muted">{artifact.label || artifact.type}</div>
-                  <img
-                    src={artifact.urlPath}
-                    alt={`${session.file.originalName} ${artifact.label || artifact.type}`}
-                    className="artifact-preview"
-                  />
+                  <div className="artifact-surface compact">
+                    <img
+                      src={artifact.urlPath}
+                      alt={`${session.file.originalName} ${artifact.label || artifact.type}`}
+                      className="artifact-preview"
+                    />
+                  </div>
                 </div>
               ))}
             </div>

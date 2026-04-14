@@ -44,7 +44,27 @@ select.input {
 .row-between { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
 .row-between.start { align-items: flex-start; }
 .align-right { text-align: right; }
-.artifact-preview { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px; background: #0d1424; }
+.artifact-surface {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #0d1424;
+  padding: 12px;
+}
+.artifact-surface.compact { max-height: 320px; }
+.artifact-surface.detail { max-height: 520px; }
+.artifact-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #0d1424;
+}
 .artifact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
 .artifact-card { display: grid; gap: 8px; }
 .pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; background: #0d1424; border: 1px solid var(--border); color: var(--muted); text-transform: capitalize; }
