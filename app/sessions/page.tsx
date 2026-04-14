@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { ClearSessionsButton, DeleteSessionButton } from '@/components/session-actions';
 import { listSessions } from '@/lib/storage/sessions';
 
+export const dynamic = 'force-dynamic';
+
 function formatBytes(sizeBytes: number) {
   return `${(sizeBytes / (1024 * 1024)).toFixed(2)} MB`;
 }
