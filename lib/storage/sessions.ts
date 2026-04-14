@@ -1,129 +1,42 @@
-import { readFile, readdir, rm, unlink, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { ensureLocalStorage, type StoredUpload } from '@/lib/storage/uploads';
+import type { SessionRepository, StoredUpload } from '@/lib/storage/contracts';
+import { localSessionRepository } from '@/lib/storage/local/session-repository';
 import type { SwingSessionRecord, UploadedSwingSession } from '@/types/session';
 
-const sessionsRoot = path.join(process.cwd(), 'data', 'sessions');
+function resolveSessionRepository(): SessionRepository {
+  const provider = process.env.SESSION_REPOSITORY_PROVIDER || 'local';
 
-function sessionPath(sessionId: string) {
-  return path.join(sessionsRoot, `${sessionId}.json`);
-}
-
-function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord {
-  return {
-    ...record,
-    reportMode: record.reportMode || 'concise',
-    playerGoal: record.playerGoal || '',
-    usualMiss: record.usualMiss || '',
-    shotShape: record.shotShape || '',
-    skillBand: record.skillBand || 'intermediate',
-    pipeline: {
-      currentStage: record.pipeline?.currentStage || (record.status === 'complete' ? 'complete' : record.status === 'failed' ? 'failed' : 'uploaded'),
-      failedStage: record.pipeline?.failedStage || null,
-      poseEstimation: record.pipeline?.poseEstimation || null,
-      phases: record.pipeline?.phases || null,
-      mediaArtifacts: record.pipeline?.mediaArtifacts || null,
-      coachingAnalysis: record.pipeline?.coachingAnalysis || null
-    }
-  };
+  switch (provider) {
+    case 'local':
+      return localSessionRepository;
+    default:
+      throw new Error(`Unsupported session repository provider: ${provider}`);
+  }
 }
 
 export function toUploadedSwingSession(session: SwingSessionRecord): UploadedSwingSession {
-  return {
-    id: session.id,
-    createdAt: session.createdAt,
-    fileName: session.file.originalName,
-    mimeType: session.file.mimeType,
-    sizeBytes: session.file.sizeBytes,
-    status: session.status
-  };
+  return resolveSessionRepository().toUploadedSession(session);
 }
 
 export async function createUploadedSession(upload: StoredUpload): Promise<SwingSessionRecord> {
-  await ensureLocalStorage();
-
-  const session: SwingSessionRecord = {
-    id: upload.sessionId,
-    createdAt: upload.createdAt,
-    updatedAt: upload.createdAt,
-    status: 'uploaded',
-    notes: '',
-    playerContext: null,
-    reportMode: 'concise',
-    playerGoal: '',
-    usualMiss: '',
-    shotShape: '',
-    skillBand: 'intermediate',
-    pipeline: {
-      currentStage: 'uploaded',
-      failedStage: null,
-      poseEstimation: null,
-      phases: null,
-      mediaArtifacts: null,
-      coachingAnalysis: null
-    },
-    analysis: null,
-    error: null,
-    file: {
-      absolutePath: upload.absolutePath,
-      storedName: upload.storedName,
-      originalName: upload.originalName,
-      mimeType: upload.mimeType,
-      sizeBytes: upload.sizeBytes
-    }
-  };
-
-  await writeSession(session);
-
-  return session;
+  return resolveSessionRepository().createFromUpload(upload);
 }
 
 export async function writeSession(session: SwingSessionRecord) {
-  await ensureLocalStorage();
-  await writeFile(sessionPath(session.id), JSON.stringify(session, null, 2), 'utf8');
+  return resolveSessionRepository().save(session);
 }
 
 export async function readSession(sessionId: string): Promise<SwingSessionRecord | null> {
-  try {
-    const data = await readFile(sessionPath(sessionId), 'utf8');
-    return normalizeSessionRecord(JSON.parse(data) as SwingSessionRecord);
-  } catch {
-    return null;
-  }
+  return resolveSessionRepository().getById(sessionId);
 }
 
 export async function listSessions(): Promise<SwingSessionRecord[]> {
-  await ensureLocalStorage();
-  const entries = await readdir(sessionsRoot, { withFileTypes: true });
-  const sessions = await Promise.all(
-    entries
-      .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
-      .map(async (entry) => {
-        const data = await readFile(path.join(sessionsRoot, entry.name), 'utf8');
-        return normalizeSessionRecord(JSON.parse(data) as SwingSessionRecord);
-      })
-  );
-
-  return sessions.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+  return resolveSessionRepository().list();
 }
 
 export async function deleteSession(sessionId: string): Promise<boolean> {
-  const session = await readSession(sessionId);
-
-  if (!session) {
-    return false;
-  }
-
-  await Promise.allSettled([
-    unlink(session.file.absolutePath),
-    rm(path.join(process.cwd(), 'data', 'artifacts', sessionId), { recursive: true, force: true }),
-    rm(sessionPath(sessionId), { force: true })
-  ]);
-
-  return true;
+  return resolveSessionRepository().deleteById(sessionId);
 }
 
 export async function deleteAllSessions() {
-  const sessions = await listSessions();
-  await Promise.all(sessions.map((session) => deleteSession(session.id)));
+  return resolveSessionRepository().deleteAll();
 }

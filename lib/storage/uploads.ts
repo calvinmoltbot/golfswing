@@ -1,50 +1,20 @@
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
-import { randomUUID } from 'node:crypto';
+import type { StoredUpload, UploadStorage } from '@/lib/storage/contracts';
+import { ensureLocalStorage, localUploadStorage } from '@/lib/storage/local/upload-storage';
 
-const dataRoot = path.join(process.cwd(), 'data');
-const uploadsRoot = path.join(dataRoot, 'uploads');
-const sessionsRoot = path.join(dataRoot, 'sessions');
-const artifactsRoot = path.join(dataRoot, 'artifacts');
+function resolveUploadStorage(): UploadStorage {
+  const provider = process.env.UPLOAD_STORAGE_PROVIDER || 'local';
 
-export type StoredUpload = {
-  sessionId: string;
-  absolutePath: string;
-  storedName: string;
-  originalName: string;
-  mimeType: string;
-  sizeBytes: number;
-  createdAt: string;
-};
-
-export async function ensureLocalStorage() {
-  await Promise.all([
-    mkdir(dataRoot, { recursive: true }),
-    mkdir(uploadsRoot, { recursive: true }),
-    mkdir(sessionsRoot, { recursive: true }),
-    mkdir(artifactsRoot, { recursive: true })
-  ]);
+  switch (provider) {
+    case 'local':
+      return localUploadStorage;
+    default:
+      throw new Error(`Unsupported upload storage provider: ${provider}`);
+  }
 }
 
+export { ensureLocalStorage };
+export type { StoredUpload };
+
 export async function persistUpload(file: File): Promise<StoredUpload> {
-  await ensureLocalStorage();
-
-  const sessionId = randomUUID();
-  const extension = path.extname(file.name) || '.mp4';
-  const storedName = `${sessionId}${extension.toLowerCase()}`;
-  const absolutePath = path.join(uploadsRoot, storedName);
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const createdAt = new Date().toISOString();
-
-  await writeFile(absolutePath, buffer);
-
-  return {
-    sessionId,
-    absolutePath,
-    storedName,
-    originalName: file.name,
-    mimeType: file.type || 'application/octet-stream',
-    sizeBytes: buffer.byteLength,
-    createdAt
-  };
+  return resolveUploadStorage().persist(file);
 }
