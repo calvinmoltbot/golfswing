@@ -35,6 +35,10 @@ const phaseLabels: Record<keyof SwingAnalysisResponse['phaseObservations'], stri
 export function UploadForm() {
   const [notes, setNotes] = useState('');
   const [reportMode, setReportMode] = useState<SwingAnalysisRequest['reportMode']>('concise');
+  const [playerGoal, setPlayerGoal] = useState('');
+  const [usualMiss, setUsualMiss] = useState('');
+  const [shotShape, setShotShape] = useState('');
+  const [skillBand, setSkillBand] = useState<SwingAnalysisRequest['skillBand']>('intermediate');
   const [playerContext, setPlayerContext] = useState<SwingAnalysisRequest['playerContext']>({
     handedness: 'right',
     cameraView: 'down-the-line',
@@ -76,7 +80,11 @@ export function UploadForm() {
           sessionId: uploadData.session.id,
           notes,
           playerContext,
-          reportMode
+          reportMode,
+          playerGoal,
+          usualMiss,
+          shotShape,
+          skillBand
         } satisfies SwingAnalysisRequest)
       });
 
@@ -95,6 +103,10 @@ export function UploadForm() {
         club: '7-iron'
       });
       setReportMode('concise');
+      setPlayerGoal('');
+      setUsualMiss('');
+      setShotShape('');
+      setSkillBand('intermediate');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -113,6 +125,7 @@ export function UploadForm() {
           <label>
             <div style={{ marginBottom: 6 }}>Handedness</div>
             <select
+              name="handedness"
               className="input"
               value={playerContext.handedness}
               onChange={(event) =>
@@ -126,6 +139,7 @@ export function UploadForm() {
           <label>
             <div style={{ marginBottom: 6 }}>Camera view</div>
             <select
+              name="cameraView"
               className="input"
               value={playerContext.cameraView}
               onChange={(event) =>
@@ -142,6 +156,7 @@ export function UploadForm() {
           <label>
             <div style={{ marginBottom: 6 }}>Club</div>
             <select
+              name="club"
               className="input"
               value={playerContext.club}
               onChange={(event) => setPlayerContext((current) => ({ ...current, club: event.target.value }))}
@@ -157,6 +172,7 @@ export function UploadForm() {
         <label>
           <div style={{ marginBottom: 6 }}>Report mode</div>
           <select
+            name="reportMode"
             className="input"
             value={reportMode}
             onChange={(event) => setReportMode(event.target.value as SwingAnalysisRequest['reportMode'])}
@@ -168,12 +184,58 @@ export function UploadForm() {
         <label>
           <div style={{ marginBottom: 6 }}>Player notes</div>
           <textarea
+            name="notes"
             className="textarea"
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             placeholder="Example: trying to stop slicing, feel stuck at impact, miss is weak right"
           />
         </label>
+        <div className="grid grid-2">
+          <label>
+            <div style={{ marginBottom: 6 }}>Primary goal</div>
+            <input
+              name="playerGoal"
+              className="input"
+              value={playerGoal}
+              onChange={(event) => setPlayerGoal(event.target.value)}
+              placeholder="Example: stop hanging back through impact"
+            />
+          </label>
+          <label>
+            <div style={{ marginBottom: 6 }}>Usual miss</div>
+            <input
+              name="usualMiss"
+              className="input"
+              value={usualMiss}
+              onChange={(event) => setUsualMiss(event.target.value)}
+              placeholder="Example: weak push right"
+            />
+          </label>
+          <label>
+            <div style={{ marginBottom: 6 }}>Typical shot shape</div>
+            <input
+              name="shotShape"
+              className="input"
+              value={shotShape}
+              onChange={(event) => setShotShape(event.target.value)}
+              placeholder="Example: fade"
+            />
+          </label>
+          <label>
+            <div style={{ marginBottom: 6 }}>Skill band</div>
+            <select
+              name="skillBand"
+              className="input"
+              value={skillBand}
+              onChange={(event) => setSkillBand(event.target.value as SwingAnalysisRequest['skillBand'])}
+            >
+              <option value="beginner">Beginner</option>
+              <option value="intermediate">Intermediate</option>
+              <option value="advanced">Advanced</option>
+            </select>
+          </label>
+        </div>
         <button className="button" type="submit" disabled={loadingLabel !== null}>
           {loadingLabel || 'Upload and analyze'}
         </button>

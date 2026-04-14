@@ -7,12 +7,20 @@ export function ReanalyzeButton({
   sessionId,
   initialNotes,
   initialPlayerContext,
-  initialReportMode
+  initialReportMode,
+  initialPlayerGoal,
+  initialUsualMiss,
+  initialShotShape,
+  initialSkillBand
 }: {
   sessionId: string;
   initialNotes: string;
   initialPlayerContext: SwingAnalysisRequest['playerContext'] | null;
   initialReportMode: SwingAnalysisRequest['reportMode'];
+  initialPlayerGoal: string;
+  initialUsualMiss: string;
+  initialShotShape: string;
+  initialSkillBand: SwingAnalysisRequest['skillBand'];
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +41,11 @@ export function ReanalyzeButton({
         body: JSON.stringify({
           notes: initialNotes,
           playerContext: initialPlayerContext,
-          reportMode: initialReportMode
+          reportMode: initialReportMode,
+          playerGoal: initialPlayerGoal,
+          usualMiss: initialUsualMiss,
+          shotShape: initialShotShape,
+          skillBand: initialSkillBand
         } satisfies Omit<SwingAnalysisRequest, 'sessionId'>)
       });
 

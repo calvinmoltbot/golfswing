@@ -34,6 +34,10 @@ export async function runSwingAnalysis({
     notes: request.notes,
     playerContext: request.playerContext,
     reportMode: request.reportMode,
+    playerGoal: request.playerGoal,
+    usualMiss: request.usualMiss,
+    shotShape: request.shotShape,
+    skillBand: request.skillBand,
     pipeline: {
       ...session.pipeline,
       failedStage: null

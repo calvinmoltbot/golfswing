@@ -70,20 +70,32 @@ export function buildMockSwingAnalysis({
 
   const viewLabel = request.playerContext.cameraView === 'down-the-line' ? 'Down-the-line' : 'Face-on';
   const notesSuffix = request.notes ? ` Player notes mention: ${request.notes.trim()}.` : '';
+  const goalSuffix = request.playerGoal ? ` The stated goal is ${request.playerGoal.trim()}.` : '';
+  const missSuffix = request.usualMiss ? ` The usual miss is ${request.usualMiss.trim()}.` : '';
+  const shotShapeSuffix = request.shotShape ? ` Typical shot shape is ${request.shotShape.trim()}.` : '';
+  const skillBandLabel = request.skillBand === 'beginner' ? 'beginner' : request.skillBand === 'advanced' ? 'advanced' : 'intermediate';
 
   return {
-    summary: `${viewLabel} mock analysis for a ${request.playerContext.club} swing. The clip shows a playable pattern, with the biggest gains available through transition control and cleaner impact alignments.${notesSuffix}`,
+    summary: `${viewLabel} mock analysis for a ${skillBandLabel} player hitting ${request.playerContext.club}. The biggest gains appear to come from transition control and cleaner impact alignments.${notesSuffix}${goalSuffix}${missSuffix}${shotShapeSuffix}`,
     confidence: 'medium',
     primaryFinding: {
       title: 'Transition is the main coaching priority',
-      detail: 'The swing has enough turn to be playable, but excessive forward motion and modest impact alignments limit strike quality.',
-      impact: 'This pattern is likely to make contact and start direction less reliable, especially under speed.',
+      detail: request.usualMiss
+        ? `The current motion suggests that transition control may be contributing to the player's usual miss of ${request.usualMiss.trim()}.`
+        : 'The swing has enough turn to be playable, but excessive forward motion and modest impact alignments limit strike quality.',
+      impact: request.shotShape
+        ? `If this pattern persists, it may exaggerate the player's typical ${request.shotShape.trim()} pattern and make contact less predictable.`
+        : 'This pattern is likely to make contact and start direction less reliable, especially under speed.',
       confidence: 'medium'
     },
     measurableCheckpoint: {
       label: 'Pelvis shift before impact',
-      target: 'Reduce visible slide before impact and keep rotation moving through the strike.',
-      whyItMatters: 'Better sequencing should improve contact quality and make face delivery easier to repeat.'
+      target: request.playerGoal
+        ? `Rehearse swings that support the goal of ${request.playerGoal.trim()} while reducing visible slide before impact.`
+        : 'Reduce visible slide before impact and keep rotation moving through the strike.',
+      whyItMatters: request.usualMiss
+        ? `Better sequencing should help reduce the player's usual miss of ${request.usualMiss.trim()}.`
+        : 'Better sequencing should improve contact quality and make face delivery easier to repeat.'
     },
     priorityFixes,
     phaseObservations: {

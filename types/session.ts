@@ -34,6 +34,10 @@ export type SwingSessionRecord = {
   notes: string;
   playerContext: SwingAnalysisRequest['playerContext'] | null;
   reportMode: SwingAnalysisRequest['reportMode'];
+  playerGoal: string;
+  usualMiss: string;
+  shotShape: string;
+  skillBand: SwingAnalysisRequest['skillBand'];
   pipeline: {
     currentStage: SwingSessionPipelineStage;
     failedStage: SwingSessionPipelineStage | null;

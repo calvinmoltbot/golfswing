@@ -13,6 +13,10 @@ function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord 
   return {
     ...record,
     reportMode: record.reportMode || 'concise',
+    playerGoal: record.playerGoal || '',
+    usualMiss: record.usualMiss || '',
+    shotShape: record.shotShape || '',
+    skillBand: record.skillBand || 'intermediate',
     pipeline: {
       currentStage: record.pipeline?.currentStage || (record.status === 'complete' ? 'complete' : record.status === 'failed' ? 'failed' : 'uploaded'),
       failedStage: record.pipeline?.failedStage || null,
@@ -46,6 +50,10 @@ export async function createUploadedSession(upload: StoredUpload): Promise<Swing
     notes: '',
     playerContext: null,
     reportMode: 'concise',
+    playerGoal: '',
+    usualMiss: '',
+    shotShape: '',
+    skillBand: 'intermediate',
     pipeline: {
       currentStage: 'uploaded',
       failedStage: null,

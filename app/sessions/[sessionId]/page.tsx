@@ -103,17 +103,27 @@ export default async function SessionDetailsPage({
             <MetricCard label="Camera view" value={session.playerContext?.cameraView || 'Not set'} />
             <MetricCard label="Club" value={session.playerContext?.club || 'Not set'} />
             <MetricCard label="Report mode" value={session.reportMode} />
+            <MetricCard label="Skill band" value={session.skillBand} />
             <MetricCard label="Clip size" value={`${(session.file.sizeBytes / (1024 * 1024)).toFixed(2)} MB`} />
           </div>
           <div className="card inset">
             <div className="muted">Notes</div>
             <p style={{ marginBottom: 0 }}>{session.notes || 'No player notes.'}</p>
           </div>
+          <div className="grid grid-3">
+            <MetricCard label="Primary goal" value={session.playerGoal || 'Not set'} />
+            <MetricCard label="Usual miss" value={session.usualMiss || 'Not set'} />
+            <MetricCard label="Shot shape" value={session.shotShape || 'Not set'} />
+          </div>
           <ReanalyzeButton
             sessionId={session.id}
             initialNotes={session.notes}
             initialPlayerContext={session.playerContext}
             initialReportMode={session.reportMode}
+            initialPlayerGoal={session.playerGoal}
+            initialUsualMiss={session.usualMiss}
+            initialShotShape={session.shotShape}
+            initialSkillBand={session.skillBand}
           />
           <DeleteSessionButton sessionId={session.id} redirectTo="/sessions" />
         </article>

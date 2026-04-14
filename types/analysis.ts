@@ -10,7 +10,11 @@ export const swingAnalysisRequestSchema = z.object({
   sessionId: z.string().min(1),
   notes: z.string().max(4000).optional().default(''),
   playerContext: playerContextSchema,
-  reportMode: z.enum(['concise', 'full']).default('concise')
+  reportMode: z.enum(['concise', 'full']).default('concise'),
+  playerGoal: z.string().max(200).optional().default(''),
+  usualMiss: z.string().max(120).optional().default(''),
+  shotShape: z.string().max(120).optional().default(''),
+  skillBand: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('intermediate')
 });
 
 export type SwingAnalysisRequest = z.infer<typeof swingAnalysisRequestSchema>;

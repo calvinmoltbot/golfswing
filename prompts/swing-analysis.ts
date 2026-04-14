@@ -80,6 +80,8 @@ Avoid generic phrases such as "solid swing", "playable pattern", "looks good ove
 If evidence quality is low, explicitly use uncertainty language like "likely", "may", or "could" and avoid claiming precise causal certainty.
 If evidence quality is medium, balance caution with specificity.
 If evidence quality is high, you can be more direct, but still tie claims to evidence.
+Use player goal, usual miss, shot shape, and skill band to prioritize advice when those fields are present.
+If the player's stated miss or goal conflicts with the raw evidence, acknowledge the uncertainty instead of forcing a false match.
 ${reportModeGuidance}`;
 
   const user = JSON.stringify(
