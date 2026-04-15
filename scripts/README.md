@@ -1,8 +1,15 @@
-# Scripts placeholder
+# Scripts
 
-Add scripts here for:
+Current scripts:
 
-- ffmpeg frame extraction
-- local video validation
-- pose estimation batch jobs
-- sample data generation
+- `check-env.mjs`
+  Validates the current provider configuration for local or production runs.
+  It loads `.env.local` and `.env` when present, then checks whether the
+  selected storage, database, and coaching providers have the required
+  environment variables.
+
+Example:
+
+```bash
+npm run check:env
+```
