@@ -20,80 +20,94 @@ export default async function SessionsPage() {
   const sessions = await listSessions();
 
   return (
-    <main className="grid" style={{ gap: 24 }}>
-      <section className="grid" style={{ gap: 8 }}>
+    <main className="stack-lg">
+      <section className="stack-sm">
         <Link href="/" className="muted">
           Back to upload
         </Link>
-        <div>
-          <h1 style={{ fontSize: 36, marginBottom: 8 }}>Swing Sessions</h1>
+        <div className="stack-sm">
+          <div className="eyebrow">Library</div>
+          <h1 style={{ fontSize: 42, margin: 0 }}>Swing Sessions</h1>
           <p className="muted" style={{ maxWidth: 760 }}>
-            Uploaded sessions persisted on the local filesystem for development. New uploads appear here immediately.
+            Review recent swings, reopen coaching reports, and manage saved sessions without digging through raw debug output.
           </p>
         </div>
         <ClearSessionsButton />
       </section>
 
       {sessions.length === 0 ? (
-        <section className="card">
-          <h2>No sessions yet</h2>
-          <p className="muted">Upload your first swing clip from the home page.</p>
+        <section className="card stack-sm">
+          <h2 style={{ margin: 0 }}>No sessions yet</h2>
+          <p className="muted" style={{ margin: 0 }}>Upload your first swing clip from the home page.</p>
         </section>
       ) : (
-        <section className="grid">
+        <section className="session-list">
           {sessions.map((session) => {
             const sessionHref = `/sessions/${session.id}` as Route;
 
             return (
-              <article key={session.id} className="card grid" style={{ gap: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-                  <div>
-                    <h2 style={{ margin: 0 }}>
-                      <Link href={sessionHref}>{session.file.originalName}</Link>
-                    </h2>
-                    <p className="muted" style={{ margin: '6px 0 0' }}>
-                      Uploaded {formatDate(session.createdAt)}
-                    </p>
-                  </div>
-                  <div className="pill">{session.status}</div>
-                </div>
-                <div className="grid grid-3">
-                  <div className="card inset">
-                    <div className="muted">Session ID</div>
-                    <div className="code">{session.id}</div>
-                  </div>
-                  <div className="card inset">
-                    <div className="muted">Format</div>
-                    <div>{session.file.mimeType}</div>
-                  </div>
-                  <div className="card inset">
-                    <div className="muted">Status</div>
-                    <div>{session.status}</div>
-                  </div>
-                </div>
-                <DeleteSessionButton sessionId={session.id} />
-                {session.analysis ? (
-                  <div className="card inset">
-                    {session.pipeline.mediaArtifacts?.poster ? (
-                      <div className="artifact-surface compact" style={{ marginBottom: 12 }}>
-                        <img
-                          src={session.pipeline.mediaArtifacts.poster.urlPath}
-                          alt={`${session.file.originalName} poster`}
-                          className="artifact-preview"
-                        />
-                      </div>
-                    ) : null}
-                    <div className="muted" style={{ marginBottom: 8 }}>
-                      Latest analysis
+              <article key={session.id} className="card session-row">
+                <div>
+                  {session.pipeline.mediaArtifacts?.poster ? (
+                    <div className="artifact-surface list">
+                      <img
+                        src={session.pipeline.mediaArtifacts.poster.urlPath}
+                        alt={`${session.file.originalName} poster`}
+                        className="artifact-preview"
+                      />
                     </div>
-                    <p style={{ margin: 0 }}>{session.analysis.summary}</p>
-                    <p style={{ margin: '10px 0 0' }}>
-                      <Link href={sessionHref} className="muted">
-                        View full session details
-                      </Link>
-                    </p>
+                  ) : (
+                    <div className="artifact-surface list">
+                      <div className="muted">Poster pending</div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="session-content">
+                  <div className="session-actions">
+                    <div className="stack-sm">
+                      <div className="eyebrow">Saved session</div>
+                      <h2 style={{ margin: 0 }}>
+                        <Link href={sessionHref}>{session.file.originalName}</Link>
+                      </h2>
+                      <p className="muted" style={{ margin: 0 }}>
+                        Uploaded {formatDate(session.createdAt)}
+                      </p>
+                    </div>
+                    <div className="pill">{session.status}</div>
                   </div>
-                ) : null}
+
+                  <div className="meta-grid">
+                    <div className="metric-tile">
+                      <div className="muted">Club</div>
+                      <div className="value small">{session.playerContext?.club || 'Not set'}</div>
+                    </div>
+                    <div className="metric-tile">
+                      <div className="muted">View</div>
+                      <div className="value small">{session.playerContext?.cameraView || 'Not set'}</div>
+                    </div>
+                    <div className="metric-tile">
+                      <div className="muted">Status</div>
+                      <div className="value small">{session.status}</div>
+                    </div>
+                    <div className="metric-tile">
+                      <div className="muted">Clip size</div>
+                      <div className="value small">{formatBytes(session.file.sizeBytes)}</div>
+                    </div>
+                  </div>
+
+                  <div className="card inset prose-card">
+                    <div className="muted">Latest analysis</div>
+                    <p style={{ margin: 0 }}>{session.analysis?.summary || 'Analysis pending.'}</p>
+                  </div>
+
+                  <div className="row-between start" style={{ flexWrap: 'wrap' }}>
+                    <Link href={sessionHref} className="button secondary">
+                      View report
+                    </Link>
+                    <DeleteSessionButton sessionId={session.id} />
+                  </div>
+                </div>
               </article>
             );
           })}

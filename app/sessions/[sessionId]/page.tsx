@@ -4,6 +4,7 @@ import { ReanalyzeButton } from '@/components/reanalyze-button';
 import { DeleteSessionButton } from '@/components/session-actions';
 import { readSession } from '@/lib/storage/sessions';
 import type { PoseMetrics, SwingPhaseDetection } from '@/types/analysis';
+import type { MediaArtifact } from '@/types/media-artifacts';
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('en-GB', {
@@ -16,30 +17,28 @@ function formatSeconds(timestampMs: number) {
   return `${(timestampMs / 1000).toFixed(2)}s`;
 }
 
-function MetricCard({ label, value }: { label: string; value: string | number }) {
+function MetricTile({ label, value, small = false }: { label: string; value: string | number; small?: boolean }) {
   return (
-    <div className="card inset">
+    <div className="metric-tile">
       <div className="muted">{label}</div>
-      <div>{value}</div>
+      <div className={`value${small ? ' small' : ''}`}>{value}</div>
     </div>
   );
 }
 
 function PoseMetricsSection({ metrics }: { metrics: PoseMetrics }) {
   return (
-    <>
-      <div className="grid grid-3">
-        <MetricCard label="FPS" value={metrics.fps} />
-        <MetricCard label="Duration" value={formatSeconds(metrics.durationMs)} />
-        <MetricCard label="Tempo ratio" value={metrics.measurements.tempoRatio.toFixed(1)} />
-        <MetricCard label="Head drift" value={`${metrics.measurements.headDriftPx}px`} />
-        <MetricCard label="Pelvis shift" value={`${metrics.measurements.pelvisShiftPx}px`} />
-        <MetricCard label="Shaft lean" value={`${metrics.measurements.shaftLeanAtImpactDeg}°`} />
-        <MetricCard label="Shoulder turn" value={`${metrics.measurements.shoulderTurnDeg}°`} />
-        <MetricCard label="Hip turn" value={`${metrics.measurements.hipTurnDeg}°`} />
-        <MetricCard label="Lead knee flex" value={`${metrics.measurements.leadKneeFlexChangeDeg}°`} />
-      </div>
-    </>
+    <div className="meta-grid">
+      <MetricTile label="FPS" value={metrics.fps} />
+      <MetricTile label="Duration" value={formatSeconds(metrics.durationMs)} />
+      <MetricTile label="Tempo ratio" value={metrics.measurements.tempoRatio.toFixed(1)} />
+      <MetricTile label="Head drift" value={`${metrics.measurements.headDriftPx}px`} />
+      <MetricTile label="Pelvis shift" value={`${metrics.measurements.pelvisShiftPx}px`} />
+      <MetricTile label="Shaft lean" value={`${metrics.measurements.shaftLeanAtImpactDeg}°`} />
+      <MetricTile label="Shoulder turn" value={`${metrics.measurements.shoulderTurnDeg}°`} />
+      <MetricTile label="Hip turn" value={`${metrics.measurements.hipTurnDeg}°`} />
+      <MetricTile label="Lead knee flex" value={`${metrics.measurements.leadKneeFlexChangeDeg}°`} />
+    </div>
   );
 }
 
@@ -54,13 +53,34 @@ function PhaseList({ phases }: { phases: SwingPhaseDetection }) {
   ] as const;
 
   return (
-    <div className="grid">
+    <div className="timeline-list">
       {orderedPhases.map(([label, value]) => (
-        <div key={label} className="row-between">
+        <div key={label} className="timeline-row">
           <span className="muted">{label}</span>
-          <span>{formatSeconds(value)}</span>
+          <strong>{formatSeconds(value)}</strong>
         </div>
       ))}
+    </div>
+  );
+}
+
+function KeyFrameCard({
+  artifact,
+  fileName
+}: {
+  artifact: MediaArtifact;
+  fileName: string;
+}) {
+  return (
+    <div className="card inset artifact-card">
+      <div className="artifact-label">{artifact.label || artifact.type}</div>
+      <div className="artifact-surface compact">
+        <img
+          src={artifact.urlPath}
+          alt={`${fileName} ${artifact.label || artifact.type}`}
+          className="artifact-preview"
+        />
+      </div>
     </div>
   );
 }
@@ -78,101 +98,86 @@ export default async function SessionDetailsPage({
   }
 
   return (
-    <main className="grid" style={{ gap: 24 }}>
-      <section className="grid" style={{ gap: 8 }}>
+    <main className="stack-lg">
+      <section className="stack-sm">
         <Link href="/sessions" className="muted">
           Back to sessions
         </Link>
-        <div>
-          <h1 style={{ fontSize: 36, marginBottom: 8 }}>{session.file.originalName}</h1>
-          <p className="muted">
-            Session {session.id} • Uploaded {formatDate(session.createdAt)} • Status {session.status}
-          </p>
-          <p className="muted">
-            Current stage: {session.pipeline.currentStage}
-            {session.pipeline.failedStage ? ` • Failed at: ${session.pipeline.failedStage}` : ''}
-          </p>
+        <div className="stack-sm">
+          <div className="eyebrow">Session report</div>
+          <h1 style={{ fontSize: 42, margin: 0 }}>{session.file.originalName}</h1>
+          <div className="session-meta-bar">
+            <span className="pill">Uploaded {formatDate(session.createdAt)}</span>
+            <span className="pill">Status {session.status}</span>
+            <span className="pill">Stage {session.pipeline.currentStage}</span>
+            {session.playerContext?.club ? <span className="pill">{session.playerContext.club}</span> : null}
+            {session.playerContext?.cameraView ? <span className="pill">{session.playerContext.cameraView}</span> : null}
+          </div>
         </div>
       </section>
 
-      <section className="grid grid-2">
-        <article className="card grid" style={{ gap: 12 }}>
-          <h2 style={{ margin: 0 }}>Session metadata</h2>
-          <div className="grid grid-2">
-            <MetricCard label="Updated" value={formatDate(session.updatedAt)} />
-            <MetricCard label="Camera view" value={session.playerContext?.cameraView || 'Not set'} />
-            <MetricCard label="Club" value={session.playerContext?.club || 'Not set'} />
-            <MetricCard label="Report mode" value={session.reportMode} />
-            <MetricCard label="Skill band" value={session.skillBand} />
-            <MetricCard label="Clip size" value={`${(session.file.sizeBytes / (1024 * 1024)).toFixed(2)} MB`} />
+      <section className="session-hero">
+        <article className="card artifact-panel">
+          <div className="row-between start" style={{ flexWrap: 'wrap' }}>
+            <div className="stack-sm">
+              <div className="eyebrow">Visual review</div>
+              <h2 className="section-title">Poster and key positions</h2>
+            </div>
+            {session.pipeline.mediaArtifacts ? (
+              <div className="pill">
+                {session.pipeline.mediaArtifacts.provider.id} · {session.pipeline.mediaArtifacts.keyFrames.length} frames
+              </div>
+            ) : null}
           </div>
-          <div className="card inset">
-            <div className="muted">Notes</div>
-            <p style={{ marginBottom: 0 }}>{session.notes || 'No player notes.'}</p>
-          </div>
-          <div className="grid grid-3">
-            <MetricCard label="Primary goal" value={session.playerGoal || 'Not set'} />
-            <MetricCard label="Usual miss" value={session.usualMiss || 'Not set'} />
-            <MetricCard label="Shot shape" value={session.shotShape || 'Not set'} />
-          </div>
-          <ReanalyzeButton
-            sessionId={session.id}
-            initialNotes={session.notes}
-            initialPlayerContext={session.playerContext}
-            initialReportMode={session.reportMode}
-            initialPlayerGoal={session.playerGoal}
-            initialUsualMiss={session.usualMiss}
-            initialShotShape={session.shotShape}
-            initialSkillBand={session.skillBand}
-          />
-          <DeleteSessionButton sessionId={session.id} redirectTo="/sessions" />
+
+          {session.pipeline.mediaArtifacts?.poster ? (
+            <div className="artifact-surface detail">
+              <img
+                src={session.pipeline.mediaArtifacts.poster.urlPath}
+                alt={`${session.file.originalName} poster`}
+                className="artifact-preview"
+              />
+            </div>
+          ) : (
+            <div className="card inset">
+              <p style={{ margin: 0 }}>Poster not generated yet.</p>
+            </div>
+          )}
+
+          {session.pipeline.mediaArtifacts?.keyFrames?.length ? (
+            <div className="artifact-grid">
+              {session.pipeline.mediaArtifacts.keyFrames.map((artifact) => (
+                <KeyFrameCard key={artifact.fileName} artifact={artifact} fileName={session.file.originalName} />
+              ))}
+            </div>
+          ) : null}
         </article>
 
-        <article className="card grid" style={{ gap: 12 }}>
-          <h2 style={{ margin: 0 }}>Analysis</h2>
+        <article className="card stack-lg summary">
+          <div className="stack-sm">
+            <div className="eyebrow">Coach summary</div>
+            <h2 className="section-title">What matters most</h2>
+          </div>
+
           {session.analysis ? (
             <>
-              <div className="card inset">
+              <div className="card inset prose-card">
                 <div className="muted">Summary</div>
-                <p style={{ marginBottom: 0 }}>{session.analysis.summary}</p>
+                <p style={{ margin: 0 }}>{session.analysis.summary}</p>
               </div>
-              <div className="card inset">
+
+              <div className="card inset prose-card">
                 <div className="muted">Primary finding</div>
-                <p style={{ marginBottom: 8 }}>
-                  <strong>{session.analysis.primaryFinding.title}</strong>
-                </p>
-                <p style={{ margin: '0 0 8px' }}>{session.analysis.primaryFinding.detail}</p>
+                <strong>{session.analysis.primaryFinding.title}</strong>
+                <p style={{ margin: 0 }}>{session.analysis.primaryFinding.detail}</p>
                 <p className="muted" style={{ margin: 0 }}>{session.analysis.primaryFinding.impact}</p>
               </div>
-              <div className="card inset">
-                <div className="muted">Priority fixes</div>
-                <ul>
-                  {session.analysis.priorityFixes.map((item) => (
-                    <li key={item.title}>
-                      <strong>{item.title}:</strong> {item.detail}
-                      <div className="muted" style={{ marginTop: 4 }}>{item.evidence}</div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="card inset">
+
+              <div className="card inset prose-card">
                 <div className="muted">Measurable checkpoint</div>
-                <p style={{ marginBottom: 8 }}>
-                  <strong>{session.analysis.measurableCheckpoint.label}</strong>
-                </p>
-                <p style={{ margin: '0 0 8px' }}>{session.analysis.measurableCheckpoint.target}</p>
+                <strong>{session.analysis.measurableCheckpoint.label}</strong>
+                <p style={{ margin: 0 }}>{session.analysis.measurableCheckpoint.target}</p>
                 <p className="muted" style={{ margin: 0 }}>{session.analysis.measurableCheckpoint.whyItMatters}</p>
-              </div>
-              <div className="card inset">
-                <div className="muted">Drills</div>
-                <ul>
-                  {session.analysis.drills.map((item) => (
-                    <li key={item.name}>
-                      <strong>{item.name}:</strong> {item.reason}
-                      <div className="muted" style={{ marginTop: 4 }}>Checkpoint: {item.checkpoint}</div>
-                    </li>
-                  ))}
-                </ul>
               </div>
             </>
           ) : (
@@ -180,23 +185,108 @@ export default async function SessionDetailsPage({
               <p style={{ margin: 0 }}>No analysis saved yet.</p>
             </div>
           )}
+
+          <div className="stack-md">
+            <ReanalyzeButton
+              sessionId={session.id}
+              initialNotes={session.notes}
+              initialPlayerContext={session.playerContext}
+              initialReportMode={session.reportMode}
+              initialPlayerGoal={session.playerGoal}
+              initialUsualMiss={session.usualMiss}
+              initialShotShape={session.shotShape}
+              initialSkillBand={session.skillBand}
+            />
+            <DeleteSessionButton sessionId={session.id} redirectTo="/sessions" />
+          </div>
         </article>
       </section>
 
-      <section className="grid grid-2">
-        <article className="card grid" style={{ gap: 12 }}>
-          <h2 style={{ margin: 0 }}>Pose estimation</h2>
+      <section className="session-report-grid">
+        <article className="card stack-lg">
+          <div className="stack-sm">
+            <div className="eyebrow">Plan</div>
+            <h2 className="section-title">Priority fixes and drills</h2>
+          </div>
+
+          {session.analysis ? (
+            <>
+              <div className="card inset prose-card">
+                <div className="muted">Priority fixes</div>
+                <ul className="bullet-list">
+                  {session.analysis.priorityFixes.map((item) => (
+                    <li key={item.title}>
+                      <strong>{item.title}</strong>
+                      <div>{item.detail}</div>
+                      <div className="muted">{item.evidence}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="card inset prose-card">
+                <div className="muted">Drills</div>
+                <ul className="bullet-list">
+                  {session.analysis.drills.map((item) => (
+                    <li key={item.name}>
+                      <strong>{item.name}</strong>
+                      <div>{item.reason}</div>
+                      <div className="muted">Checkpoint: {item.checkpoint}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          ) : (
+            <div className="card inset">
+              <p style={{ margin: 0 }}>No coaching recommendations saved yet.</p>
+            </div>
+          )}
+        </article>
+
+        <article className="card stack-lg">
+          <div className="stack-sm">
+            <div className="eyebrow">Context</div>
+            <h2 className="section-title">Session setup</h2>
+          </div>
+
+          <div className="meta-grid">
+            <MetricTile label="Updated" value={formatDate(session.updatedAt)} small />
+            <MetricTile label="Club" value={session.playerContext?.club || 'Not set'} small />
+            <MetricTile label="Camera view" value={session.playerContext?.cameraView || 'Not set'} small />
+            <MetricTile label="Report mode" value={session.reportMode} small />
+            <MetricTile label="Skill band" value={session.skillBand} small />
+            <MetricTile label="Clip size" value={`${(session.file.sizeBytes / (1024 * 1024)).toFixed(2)} MB`} small />
+          </div>
+
+          <div className="card inset prose-card">
+            <div className="muted">Player notes</div>
+            <p style={{ margin: 0 }}>{session.notes || 'No player notes.'}</p>
+          </div>
+
+          <div className="meta-grid">
+            <MetricTile label="Primary goal" value={session.playerGoal || 'Not set'} small />
+            <MetricTile label="Usual miss" value={session.usualMiss || 'Not set'} small />
+            <MetricTile label="Shot shape" value={session.shotShape || 'Not set'} small />
+          </div>
+        </article>
+      </section>
+
+      <section className="session-report-grid">
+        <article className="card stack-lg">
+          <div className="stack-sm">
+            <div className="eyebrow">Motion data</div>
+            <h2 className="section-title">Pose and timing</h2>
+          </div>
+
           {session.pipeline.poseEstimation ? (
             <>
-              <div className="grid grid-3">
-                <MetricCard label="Provider" value={session.pipeline.poseEstimation.provider.id} />
-                <MetricCard label="Version" value={session.pipeline.poseEstimation.provider.version} />
-                <MetricCard label="Frames" value={session.pipeline.poseEstimation.keypointFrames.length} />
+              <div className="meta-grid">
+                <MetricTile label="Provider" value={session.pipeline.poseEstimation.provider.id} small />
+                <MetricTile label="Version" value={session.pipeline.poseEstimation.provider.version} small />
+                <MetricTile label="Frames" value={session.pipeline.poseEstimation.keypointFrames.length} small />
               </div>
-              <div className="card inset">
-                <div className="muted">Metrics</div>
-                <PoseMetricsSection metrics={session.pipeline.poseEstimation.metrics} />
-              </div>
+              <PoseMetricsSection metrics={session.pipeline.poseEstimation.metrics} />
             </>
           ) : (
             <div className="card inset">
@@ -205,8 +295,12 @@ export default async function SessionDetailsPage({
           )}
         </article>
 
-        <article className="card grid" style={{ gap: 12 }}>
-          <h2 style={{ margin: 0 }}>Phase detection</h2>
+        <article className="card stack-lg">
+          <div className="stack-sm">
+            <div className="eyebrow">Pipeline</div>
+            <h2 className="section-title">Phase timing and model metadata</h2>
+          </div>
+
           {session.pipeline.phases ? (
             <div className="card inset">
               <PhaseList phases={session.pipeline.phases} />
@@ -216,101 +310,50 @@ export default async function SessionDetailsPage({
               <p style={{ margin: 0 }}>No phase timings saved yet.</p>
             </div>
           )}
+
+          {session.pipeline.coachingAnalysis ? (
+            <div className="meta-grid">
+              <MetricTile label="Provider" value={session.pipeline.coachingAnalysis.providerId} small />
+              <MetricTile label="Model" value={session.pipeline.coachingAnalysis.model} small />
+              <MetricTile label="Requested" value={formatDate(session.pipeline.coachingAnalysis.requestedAt)} small />
+              <MetricTile
+                label="Completed"
+                value={
+                  session.pipeline.coachingAnalysis.completedAt
+                    ? formatDate(session.pipeline.coachingAnalysis.completedAt)
+                    : 'Not completed'
+                }
+                small
+              />
+              <MetricTile
+                label="Validation"
+                value={session.pipeline.coachingAnalysis.validationError ? 'Failed' : 'Passed'}
+                small
+              />
+            </div>
+          ) : null}
+
+          {session.pipeline.failedStage ? (
+            <div className="card inset prose-card">
+              <div className="muted">Failed stage</div>
+              <p style={{ margin: 0 }}>{session.pipeline.failedStage}</p>
+            </div>
+          ) : null}
+
+          {session.pipeline.coachingAnalysis?.validationError ? (
+            <div className="card inset prose-card">
+              <div className="muted">Validation or provider error</div>
+              <p style={{ margin: 0 }}>{session.pipeline.coachingAnalysis.validationError}</p>
+            </div>
+          ) : null}
+
           {session.error ? (
-            <div className="card inset">
+            <div className="card inset prose-card">
               <div className="muted">Last error</div>
-              <p style={{ marginBottom: 0 }}>{session.error}</p>
+              <p style={{ margin: 0 }}>{session.error}</p>
             </div>
           ) : null}
         </article>
-      </section>
-
-      <section className="card grid" style={{ gap: 12 }}>
-        <h2 style={{ margin: 0 }}>Coaching analysis</h2>
-        {session.pipeline.coachingAnalysis ? (
-          <div className="grid grid-3">
-            <MetricCard label="Provider" value={session.pipeline.coachingAnalysis.providerId} />
-            <MetricCard label="Model" value={session.pipeline.coachingAnalysis.model} />
-            <MetricCard
-              label="Requested"
-              value={formatDate(session.pipeline.coachingAnalysis.requestedAt)}
-            />
-            <MetricCard
-              label="Completed"
-              value={
-                session.pipeline.coachingAnalysis.completedAt
-                  ? formatDate(session.pipeline.coachingAnalysis.completedAt)
-                  : 'Not completed'
-              }
-            />
-            <MetricCard
-              label="Validation"
-              value={session.pipeline.coachingAnalysis.validationError ? 'Failed' : 'Passed'}
-            />
-          </div>
-        ) : (
-          <div className="card inset">
-            <p style={{ margin: 0 }}>No coaching-analysis metadata saved yet.</p>
-          </div>
-        )}
-        {session.pipeline.coachingAnalysis?.validationError ? (
-          <div className="card inset">
-            <div className="muted">Validation or provider error</div>
-            <p style={{ marginBottom: 0 }}>{session.pipeline.coachingAnalysis.validationError}</p>
-          </div>
-        ) : null}
-      </section>
-
-      <section className="card grid" style={{ gap: 12 }}>
-        <h2 style={{ margin: 0 }}>Media artifacts</h2>
-        {session.pipeline.mediaArtifacts ? (
-          <>
-            <div className="grid grid-3">
-              <div className="card inset">
-                <div className="muted">Provider</div>
-                <div>{session.pipeline.mediaArtifacts.provider.id}</div>
-              </div>
-              <div className="card inset">
-                <div className="muted">Version</div>
-                <div>{session.pipeline.mediaArtifacts.provider.version}</div>
-              </div>
-              <div className="card inset">
-                <div className="muted">Key frames</div>
-                <div>{session.pipeline.mediaArtifacts.keyFrames.length}</div>
-              </div>
-            </div>
-            {session.pipeline.mediaArtifacts.poster ? (
-              <div className="card inset">
-                <div className="muted" style={{ marginBottom: 8 }}>Poster</div>
-                <div className="artifact-surface detail">
-                  <img
-                    src={session.pipeline.mediaArtifacts.poster.urlPath}
-                    alt={`${session.file.originalName} poster`}
-                    className="artifact-preview"
-                  />
-                </div>
-              </div>
-            ) : null}
-            <div className="artifact-grid">
-              {session.pipeline.mediaArtifacts.keyFrames.map((artifact) => (
-                <div key={artifact.fileName} className="card inset artifact-card">
-                  <div className="muted">{artifact.label || artifact.type}</div>
-                  <div className="artifact-surface compact">
-                    <img
-                      src={artifact.urlPath}
-                      alt={`${session.file.originalName} ${artifact.label || artifact.type}`}
-                      className="artifact-preview"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="card inset">
-            <p style={{ margin: 0 }}>No media artifacts saved yet.</p>
-          </div>
-        )}
       </section>
     </main>
   );
