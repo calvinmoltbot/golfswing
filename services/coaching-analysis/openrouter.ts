@@ -30,6 +30,16 @@ function validateCoachingQuality(response: ReturnType<typeof swingAnalysisRespon
     return `Priority fix "${weakEvidence.title}" did not include concrete evidence.`;
   }
 
+  const weakIssueEvidence = response.issueTaxonomy.find(
+    (item) =>
+      !/[0-9]/.test(item.evidence) &&
+      !/(address|backswing|top|transition|impact|finish|head|pelvis|tempo|shaft|shoulder|hip|knee)/i.test(item.evidence)
+  );
+
+  if (weakIssueEvidence) {
+    return `Issue taxonomy item "${weakIssueEvidence.code}" did not include concrete evidence.`;
+  }
+
   return null;
 }
 

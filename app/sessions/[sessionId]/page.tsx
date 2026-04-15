@@ -173,6 +173,22 @@ export default async function SessionDetailsPage({
                 <p className="muted" style={{ margin: 0 }}>{session.analysis.primaryFinding.impact}</p>
               </div>
 
+              {session.analysis.issueTaxonomy.length ? (
+                <div className="card inset prose-card">
+                  <div className="muted">Recurring issue tags</div>
+                  <ul className="bullet-list">
+                    {session.analysis.issueTaxonomy.map((issue) => (
+                      <li key={issue.code}>
+                        <strong>{issue.label}</strong>
+                        <div className="muted">
+                          {issue.severity} severity · {issue.evidence}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
               <div className="card inset prose-card">
                 <div className="muted">Measurable checkpoint</div>
                 <strong>{session.analysis.measurableCheckpoint.label}</strong>

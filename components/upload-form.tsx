@@ -32,6 +32,12 @@ const phaseLabels: Record<keyof SwingAnalysisResponse['phaseObservations'], stri
   finish: 'Finish'
 };
 
+const issueSeverityLabel: Record<'low' | 'medium' | 'high', string> = {
+  low: 'Low',
+  medium: 'Medium',
+  high: 'High'
+};
+
 export function UploadForm() {
   const [notes, setNotes] = useState('');
   const [reportMode, setReportMode] = useState<SwingAnalysisRequest['reportMode']>('concise');
@@ -259,6 +265,19 @@ export function UploadForm() {
             <h3>Summary</h3>
             <p>{result.summary}</p>
             <p className="muted">Confidence: {result.confidence}</p>
+            {result.issueTaxonomy.length ? (
+              <div className="card inset" style={{ marginTop: 12 }}>
+                <div className="muted" style={{ marginBottom: 8 }}>Issue taxonomy</div>
+                <div className="grid" style={{ gap: 8 }}>
+                  {result.issueTaxonomy.map((issue) => (
+                    <div key={issue.code}>
+                      <strong>{issue.label}</strong> <span className="muted">({issueSeverityLabel[issue.severity]})</span>
+                      <div className="muted" style={{ marginTop: 4 }}>{issue.evidence}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="card inset" style={{ marginTop: 12 }}>
               <div className="muted">Primary finding</div>
               <p style={{ marginBottom: 8 }}>

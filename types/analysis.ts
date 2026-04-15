@@ -75,9 +75,28 @@ export type SwingPhaseDetection = {
   finishMs: number;
 };
 
+export const swingIssueCodeSchema = z.enum([
+  'head_drift',
+  'excessive_slide',
+  'under_rotated_hips',
+  'low_shaft_lean',
+  'tempo_outlier',
+  'limited_lead_knee_flex'
+]);
+
+export type SwingIssueCode = z.infer<typeof swingIssueCodeSchema>;
+
 export const swingAnalysisResponseSchema = z.object({
   summary: z.string().min(1),
   confidence: z.enum(['low', 'medium', 'high']),
+  issueTaxonomy: z.array(
+    z.object({
+      code: swingIssueCodeSchema,
+      label: z.string().min(1),
+      severity: z.enum(['low', 'medium', 'high']),
+      evidence: z.string().min(1)
+    })
+  ),
   primaryFinding: z.object({
     title: z.string().min(1),
     detail: z.string().min(1),

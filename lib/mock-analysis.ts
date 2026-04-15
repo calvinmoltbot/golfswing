@@ -1,4 +1,10 @@
-import type { PoseMetrics, SwingAnalysisRequest, SwingAnalysisResponse, SwingPhaseDetection } from '@/types/analysis';
+import type {
+  PoseMetrics,
+  SwingAnalysisRequest,
+  SwingAnalysisResponse,
+  SwingIssueCode,
+  SwingPhaseDetection
+} from '@/types/analysis';
 
 function formatPhaseTime(timestampMs: number) {
   return `${(timestampMs / 1000).toFixed(2)}s`;
@@ -37,8 +43,17 @@ export function buildMockSwingAnalysis({
 }): SwingAnalysisResponse {
   const priorityFixes: SwingAnalysisResponse['priorityFixes'] = [];
   const drills: SwingAnalysisResponse['drills'] = [];
+  const issueTaxonomy: SwingAnalysisResponse['issueTaxonomy'] = [];
   const clubCategory = deriveClubCategory(request.playerContext.club);
   const isFaceOn = request.playerContext.cameraView === 'face-on';
+
+  function pushIssue(code: SwingIssueCode, label: string, severity: 'low' | 'medium' | 'high', evidence: string) {
+    if (issueTaxonomy.some((item) => item.code === code)) {
+      return;
+    }
+
+    issueTaxonomy.push({ code, label, severity, evidence });
+  }
 
   const clubPriorityLabel =
     clubCategory === 'driver'
@@ -53,6 +68,12 @@ export function buildMockSwingAnalysis({
   const viewPriorityLabel = isFaceOn ? 'centered pressure shift' : 'delivery geometry';
 
   if (metrics.measurements.pelvisShiftPx > 20) {
+    pushIssue(
+      'excessive_slide',
+      'Excessive lateral slide',
+      metrics.measurements.pelvisShiftPx > 26 ? 'high' : 'medium',
+      `Pelvis shift reaches ${metrics.measurements.pelvisShiftPx}px around ${formatPhaseTime(phases.transitionMs)}.`
+    );
     priorityFixes.push({
       title: 'Reduce lateral slide in transition',
       detail: isFaceOn
@@ -72,6 +93,12 @@ export function buildMockSwingAnalysis({
   }
 
   if (metrics.measurements.shaftLeanAtImpactDeg < 10) {
+    pushIssue(
+      'low_shaft_lean',
+      clubCategory === 'driver' ? 'Limited delivered handle control' : 'Low shaft lean at impact',
+      metrics.measurements.shaftLeanAtImpactDeg < 7 ? 'high' : 'medium',
+      `Impact is measured at ${metrics.measurements.shaftLeanAtImpactDeg}° of shaft lean near ${formatPhaseTime(phases.impactMs)}.`
+    );
     priorityFixes.push({
       title: 'Improve forward shaft lean at impact',
       detail:
@@ -96,6 +123,12 @@ export function buildMockSwingAnalysis({
   }
 
   if (metrics.measurements.tempoRatio > 2.7) {
+    pushIssue(
+      'tempo_outlier',
+      'Tempo running quick in transition',
+      metrics.measurements.tempoRatio > 3 ? 'high' : 'medium',
+      `Tempo ratio is ${metrics.measurements.tempoRatio.toFixed(1)} through the full motion.`
+    );
     priorityFixes.push({
       title: 'Smooth the overall tempo',
       detail: 'Reduce the abrupt change from backswing to downswing so the motion stays easier to repeat.',
@@ -106,6 +139,33 @@ export function buildMockSwingAnalysis({
       reason: 'Encourages a calmer transition and a more repeatable strike pattern.',
       checkpoint: 'Match backswing count to a calm three-count and downswing to one-count.'
     });
+  }
+
+  if (metrics.measurements.hipTurnDeg < 45) {
+    pushIssue(
+      'under_rotated_hips',
+      'Hip turn is under-rotated',
+      metrics.measurements.hipTurnDeg < 38 ? 'high' : 'medium',
+      `Hip turn is ${metrics.measurements.hipTurnDeg}° versus ${metrics.measurements.shoulderTurnDeg}° shoulder turn by ${formatPhaseTime(phases.topMs)}.`
+    );
+  }
+
+  if (metrics.measurements.leadKneeFlexChangeDeg < 14) {
+    pushIssue(
+      'limited_lead_knee_flex',
+      'Lead knee flexion is limited',
+      metrics.measurements.leadKneeFlexChangeDeg < 10 ? 'high' : 'medium',
+      `Lead knee flex changes only ${metrics.measurements.leadKneeFlexChangeDeg}° through transition and impact.`
+    );
+  }
+
+  if (metrics.measurements.headDriftPx > 16) {
+    pushIssue(
+      'head_drift',
+      'Head drift is elevated',
+      metrics.measurements.headDriftPx > 22 ? 'high' : 'medium',
+      `Head drift measures ${metrics.measurements.headDriftPx}px across the swing.`
+    );
   }
 
   if (priorityFixes.length === 0) {
@@ -131,6 +191,7 @@ export function buildMockSwingAnalysis({
   return {
     summary: `${viewLabel} mock analysis for a ${skillBandLabel} player hitting ${request.playerContext.club}. The biggest gains appear to come from ${viewPriorityLabel} and better ${clubPriorityLabel}.${notesSuffix}${goalSuffix}${missSuffix}${shotShapeSuffix}`,
     confidence: 'medium',
+    issueTaxonomy,
     primaryFinding: {
       title: isFaceOn ? 'Centered transition is the main coaching priority' : 'Delivery and transition are the main coaching priority',
       detail: request.usualMiss

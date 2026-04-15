@@ -79,6 +79,14 @@ Return strict JSON only with this shape:
 {
   "summary": string,
   "confidence": "low" | "medium" | "high",
+  "issueTaxonomy": [
+    {
+      "code": "head_drift" | "excessive_slide" | "under_rotated_hips" | "low_shaft_lean" | "tempo_outlier" | "limited_lead_knee_flex",
+      "label": string,
+      "severity": "low" | "medium" | "high",
+      "evidence": string
+    }
+  ],
   "primaryFinding": {
     "title": string,
     "detail": string,
@@ -111,6 +119,7 @@ Return strict JSON only with this shape:
 Do not invent exact biomechanical certainty from weak evidence. Use cautious language where appropriate.
 Prioritize actionable coaching over generic praise.
 Every priority fix must cite specific evidence from metrics or phase timings.
+Every issueTaxonomy item must use one of the allowed codes and include evidence.
 The primary finding should name the biggest problem and its likely ball-flight or contact consequence.
 The measurable checkpoint should be something a player can track in the next session.
 Avoid generic phrases such as "solid swing", "playable pattern", "looks good overall", "keep it up", or "minor tweaks".
