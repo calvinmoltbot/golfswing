@@ -54,5 +54,7 @@ export type SwingSessionRecord = {
     originalName: string;
     mimeType: string;
     sizeBytes: number;
+    storageKey?: string | null;
+    publicUrl?: string | null;
   };
 };

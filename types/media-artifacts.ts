@@ -2,7 +2,8 @@ export type MediaArtifact = {
   type: 'poster' | 'key-frame';
   label?: 'address' | 'top' | 'impact' | 'finish';
   fileName: string;
-  absolutePath: string;
+  storageKey: string;
+  absolutePath?: string | null;
   contentType: string;
   urlPath: string;
 };

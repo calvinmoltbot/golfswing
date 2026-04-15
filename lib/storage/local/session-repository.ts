@@ -1,12 +1,14 @@
 import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { ensureLocalStorage, localUploadStorage } from '@/lib/storage/local/upload-storage';
+import { deleteStoredArtifacts } from '@/lib/storage/artifacts';
+import { ensureLocalStorage } from '@/lib/storage/local/upload-storage';
 import {
   createSessionRecordFromUpload,
   normalizeSessionRecord,
   toUploadedSwingSession
 } from '@/lib/storage/session-record';
 import type { SessionRepository, StoredUpload } from '@/lib/storage/contracts';
+import { deleteStoredUpload } from '@/lib/storage/uploads';
 import type { SwingSessionRecord } from '@/types/session';
 
 const sessionsRoot = path.join(process.cwd(), 'data', 'sessions');
@@ -62,8 +64,8 @@ export const localSessionRepository: SessionRepository = {
     }
 
     await Promise.allSettled([
-      localUploadStorage.delete({ absolutePath: session.file.absolutePath }),
-      rm(path.join(process.cwd(), 'data', 'artifacts', sessionId), { recursive: true, force: true }),
+      deleteStoredUpload(session.file),
+      deleteStoredArtifacts(sessionId, session.pipeline.mediaArtifacts),
       rm(sessionPath(sessionId), { force: true })
     ]);
 

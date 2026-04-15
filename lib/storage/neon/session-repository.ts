@@ -1,12 +1,11 @@
-import { rm } from 'node:fs/promises';
-import path from 'node:path';
 import {
   createSessionRecordFromUpload,
   normalizeSessionRecord,
   toUploadedSwingSession
 } from '@/lib/storage/session-record';
+import { deleteStoredArtifacts } from '@/lib/storage/artifacts';
 import type { SessionRepository, StoredUpload } from '@/lib/storage/contracts';
-import { localUploadStorage } from '@/lib/storage/local/upload-storage';
+import { deleteStoredUpload } from '@/lib/storage/uploads';
 import { getNeonSql } from '@/lib/storage/neon/client';
 import type { SwingSessionRecord } from '@/types/session';
 
@@ -161,8 +160,8 @@ export const neonSessionRepository: SessionRepository = {
     `;
 
     await Promise.allSettled([
-      localUploadStorage.delete({ absolutePath: session.file.absolutePath }),
-      rm(path.join(process.cwd(), 'data', 'artifacts', sessionId), { recursive: true, force: true })
+      deleteStoredUpload(session.file),
+      deleteStoredArtifacts(sessionId, session.pipeline.mediaArtifacts)
     ]);
 
     return true;
@@ -176,8 +175,8 @@ export const neonSessionRepository: SessionRepository = {
 
     await Promise.allSettled(
       sessions.flatMap((session) => [
-        localUploadStorage.delete({ absolutePath: session.file.absolutePath }),
-        rm(path.join(process.cwd(), 'data', 'artifacts', session.id), { recursive: true, force: true })
+        deleteStoredUpload(session.file),
+        deleteStoredArtifacts(session.id, session.pipeline.mediaArtifacts)
       ])
     );
   },

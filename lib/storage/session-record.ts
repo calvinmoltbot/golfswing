@@ -63,7 +63,12 @@ export function normalizeSessionRecord(record: SwingSessionRecord): SwingSession
       mediaArtifacts: record.pipeline?.mediaArtifacts || null,
       coachingAnalysis: record.pipeline?.coachingAnalysis || null
     },
-    analysis: normalizeAnalysisResponse(record.analysis)
+    analysis: normalizeAnalysisResponse(record.analysis),
+    file: {
+      ...record.file,
+      storageKey: record.file.storageKey || null,
+      publicUrl: record.file.publicUrl || null
+    }
   };
 }
 
@@ -106,7 +111,9 @@ export function createSessionRecordFromUpload(upload: StoredUpload): SwingSessio
       storedName: upload.storedName,
       originalName: upload.originalName,
       mimeType: upload.mimeType,
-      sizeBytes: upload.sizeBytes
+      sizeBytes: upload.sizeBytes,
+      storageKey: upload.storageKey || null,
+      publicUrl: upload.publicUrl || null
     }
   };
 }

@@ -1,6 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { NextResponse } from 'next/server';
+import { readStoredArtifact } from '@/lib/storage/artifacts';
 import { readSession } from '@/lib/storage/sessions';
 
 export async function GET(
@@ -26,8 +25,7 @@ export async function GET(
     return new NextResponse('Not found', { status: 404 });
   }
 
-  const safePath = path.normalize(artifact.absolutePath);
-  const buffer = await readFile(safePath);
+  const buffer = await readStoredArtifact(artifact);
 
   return new NextResponse(buffer, {
     headers: {

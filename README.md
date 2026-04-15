@@ -30,21 +30,21 @@ Pure LLM-based raw video review is not robust enough for golf feedback. The app 
 
 This repo includes:
 
-- project structure
-- typed contracts
-- OpenRouter client wrapper
-- API route scaffold
-- prompt templates
-- implementation roadmap
-- placeholder hooks for pose estimation and phase detection
+- Next.js upload and analysis flow
+- typed contracts for analysis, taxonomy, and phase scoring
+- OpenRouter-backed coaching provider with mock fallback
+- local session history and media artifact extraction
+- storage abstractions for sessions, uploads, and artifacts
+- a Neon session repository adapter
+- S3-compatible upload and artifact storage adapters
+- prompt templates and implementation roadmap
 
 It does **not** yet include:
 
 - a production pose-estimation engine
-- a real database
 - authentication
-- object storage
-- a polished UI
+- a fully configured production object-storage account
+- a deployed Vercel environment
 
 ## Fastest route from here
 
@@ -71,6 +71,25 @@ cp .env.example .env.local
 npm install
 npm run dev
 ```
+
+### Local development defaults
+
+The local development path can run entirely from disk:
+
+- `SESSION_REPOSITORY_PROVIDER=local`
+- `UPLOAD_STORAGE_PROVIDER=local`
+- `ARTIFACT_STORAGE_PROVIDER=local`
+- `COACHING_ANALYSIS_PROVIDER=mock` or `openrouter`
+
+### Beta deployment target
+
+The current deployment path is:
+
+- Vercel for the Next.js app
+- Neon for session metadata
+- S3-compatible object storage for uploaded videos and still images
+
+See [`docs/DEPLOYMENT_PLAN.md`](docs/DEPLOYMENT_PLAN.md) for the staged rollout checklist.
 
 ## Future milestones
 

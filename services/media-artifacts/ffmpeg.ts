@@ -1,8 +1,11 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { MediaArtifact, MediaArtifactProvider, MediaArtifactResult } from '@/types/media-artifacts';
+import { persistSessionArtifacts } from '@/lib/storage/artifacts';
+import type { GeneratedArtifactInput } from '@/lib/storage/contracts';
+import type { MediaArtifactProvider, MediaArtifactResult } from '@/types/media-artifacts';
 
 const execFileAsync = promisify(execFile);
 const ffmpegPath = process.env.FFMPEG_PATH || '/opt/homebrew/bin/ffmpeg';
@@ -11,30 +14,15 @@ async function runFfmpeg(args: string[]) {
   await execFileAsync(ffmpegPath, args);
 }
 
-function artifactUrl(sessionId: string, fileName: string) {
-  return `/api/sessions/${sessionId}/artifacts/${fileName}`;
-}
-
-function buildArtifact(sessionId: string, fileName: string, absolutePath: string, type: MediaArtifact['type'], label?: MediaArtifact['label']): MediaArtifact {
-  return {
-    type,
-    label,
-    fileName,
-    absolutePath,
-    contentType: 'image/jpeg',
-    urlPath: artifactUrl(sessionId, fileName)
-  };
-}
-
 export function createFfmpegMediaArtifactProvider(): MediaArtifactProvider {
   return {
     id: 'ffmpeg',
     async extract({ sessionId, videoPath, keyFrames }): Promise<MediaArtifactResult> {
-      const sessionArtifactRoot = path.join(process.cwd(), 'data', 'artifacts', sessionId);
-      await mkdir(sessionArtifactRoot, { recursive: true });
+      const tempArtifactRoot = path.join(os.tmpdir(), `golfswing-artifacts-${sessionId}`);
+      await mkdir(tempArtifactRoot, { recursive: true });
 
       const posterFileName = 'poster.jpg';
-      const posterPath = path.join(sessionArtifactRoot, posterFileName);
+      const posterPath = path.join(tempArtifactRoot, posterFileName);
       await runFfmpeg([
         '-y',
         '-i',
@@ -48,12 +36,19 @@ export function createFfmpegMediaArtifactProvider(): MediaArtifactProvider {
         posterPath
       ]);
 
-      const keyFrameArtifacts: MediaArtifact[] = [];
+      const generatedArtifacts: GeneratedArtifactInput[] = [
+        {
+          type: 'poster' as const,
+          fileName: posterFileName,
+          sourcePath: posterPath,
+          contentType: 'image/jpeg'
+        }
+      ];
 
       for (const frame of keyFrames) {
         const seconds = Math.max(frame.timestampMs / 1000, 0).toFixed(3);
         const fileName = `${frame.label}.jpg`;
-        const absolutePath = path.join(sessionArtifactRoot, fileName);
+        const absolutePath = path.join(tempArtifactRoot, fileName);
 
         await runFfmpeg([
           '-y',
@@ -68,15 +63,31 @@ export function createFfmpegMediaArtifactProvider(): MediaArtifactProvider {
           absolutePath
         ]);
 
-        keyFrameArtifacts.push(buildArtifact(sessionId, fileName, absolutePath, 'key-frame', frame.label));
+        generatedArtifacts.push({
+          type: 'key-frame',
+          label: frame.label,
+          fileName,
+          sourcePath: absolutePath,
+          contentType: 'image/jpeg'
+        });
       }
+
+      const storedArtifacts = await persistSessionArtifacts({
+        sessionId,
+        artifacts: generatedArtifacts
+      });
+
+      await rm(tempArtifactRoot, { recursive: true, force: true });
+
+      const poster = storedArtifacts.find((artifact) => artifact.type === 'poster') || null;
+      const keyFrameArtifacts = storedArtifacts.filter((artifact) => artifact.type === 'key-frame');
 
       return {
         provider: {
           id: 'ffmpeg',
           version: 'local'
         },
-        poster: buildArtifact(sessionId, posterFileName, posterPath, 'poster'),
+        poster,
         keyFrames: keyFrameArtifacts
       };
     }

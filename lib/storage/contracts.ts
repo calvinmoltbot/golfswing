@@ -1,4 +1,5 @@
 import type { SwingSessionRecord, UploadedSwingSession } from '@/types/session';
+import type { MediaArtifact, MediaArtifactResult } from '@/types/media-artifacts';
 
 export type StoredUpload = {
   sessionId: string;
@@ -8,12 +9,38 @@ export type StoredUpload = {
   mimeType: string;
   sizeBytes: number;
   createdAt: string;
+  storageKey?: string | null;
+  publicUrl?: string | null;
 };
+
+export type StoredUploadRef = Pick<
+  StoredUpload,
+  'absolutePath' | 'storedName' | 'originalName' | 'mimeType' | 'sizeBytes' | 'storageKey' | 'publicUrl'
+>;
 
 export type UploadStorage = {
   persist(file: File): Promise<StoredUpload>;
-  delete(upload: { absolutePath: string }): Promise<void>;
+  prepareForProcessing(upload: StoredUploadRef): Promise<string>;
+  delete(upload: StoredUploadRef): Promise<void>;
   ensure(): Promise<void>;
+};
+
+export type GeneratedArtifactInput = {
+  type: MediaArtifact['type'];
+  label?: MediaArtifact['label'];
+  fileName: string;
+  sourcePath: string;
+  contentType: string;
+};
+
+export type ArtifactStorage = {
+  ensure(): Promise<void>;
+  persistSessionArtifacts(input: {
+    sessionId: string;
+    artifacts: GeneratedArtifactInput[];
+  }): Promise<MediaArtifact[]>;
+  readArtifact(artifact: MediaArtifact): Promise<Buffer>;
+  deleteSessionArtifacts(sessionId: string, artifacts?: MediaArtifactResult | null): Promise<void>;
 };
 
 export type SessionRepository = {

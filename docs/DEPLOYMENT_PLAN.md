@@ -22,6 +22,15 @@ Current runtime uses the local implementations only:
 
 This keeps behavior unchanged in development while making production adapters possible.
 
+Current implementation progress:
+
+- Neon session repository exists and is selectable via env
+- Neon project `golfswing` was created in the personal Neon org
+- `db/neon/001_create_swing_sessions.sql` has been applied to that project
+- uploads can now be staged for processing through the upload-storage abstraction
+- media artifact serving and cleanup now go through artifact-storage abstractions rather than direct route-level disk reads
+- both uploads and artifacts now have first-pass S3-compatible adapters
+
 ## Recommended production shape
 
 ### App
@@ -98,8 +107,10 @@ Current implementation status:
 - `db/neon/001_create_swing_sessions.sql` defines the initial table
 - runtime can opt into it with `SESSION_REPOSITORY_PROVIDER=neon`
 - `DATABASE_URL` or `NEON_DATABASE_URL` is required when the Neon adapter is selected
+- fresh Neon project created: `golfswing` (`green-sunset-66448055`)
+- initial schema has already been applied there
 
-This still keeps uploads and artifacts on local disk, so it is only a partial production step.
+This still requires a real production `DATABASE_URL` to be configured in Vercel before the Neon adapter can be used in the hosted app.
 
 ### Phase 3 — artifact storage adapter
 
@@ -148,11 +159,15 @@ Then:
 
 - `UPLOAD_STORAGE_PROVIDER=s3`
 - `SESSION_REPOSITORY_PROVIDER=neon`
-- `DATABASE_URL=postgres://...`
-
-Future:
-
 - `ARTIFACT_STORAGE_PROVIDER=s3`
+- `DATABASE_URL=postgres://...`
+- `S3_BUCKET=...`
+- `S3_REGION=...`
+- `S3_ENDPOINT=...` if using a non-AWS S3-compatible provider
+- `S3_ACCESS_KEY_ID=...`
+- `S3_SECRET_ACCESS_KEY=...`
+- `S3_PUBLIC_BASE_URL=...` if artifact/object URLs should be directly renderable
+- `S3_FORCE_PATH_STYLE=true` when required by the provider
 
 ## Minimum next milestone
 
@@ -164,3 +179,137 @@ The next deployment-oriented coding milestone should be:
 4. do not switch the app default yet
 
 That gives us the first real production dependency without rewriting the media path at the same time.
+
+## Beta checklist
+
+This is the shortest sensible path to a real beta that your nephew can use on Vercel.
+
+### Stage 1 — choose and wire object storage
+
+- Pick one object storage provider:
+  - Cloudflare R2
+  - AWS S3
+  - another S3-compatible provider
+- Add a production upload-storage adapter that:
+  - accepts uploaded video files
+  - stores them by object key instead of local absolute path
+  - returns enough metadata for analysis and deletion
+- Keep the existing local upload adapter for development
+
+Definition of done:
+
+- Uploaded videos no longer require `data/uploads` in production
+- Runtime can switch providers with env flags
+
+Current progress:
+
+- `lib/storage/s3/upload-storage.ts` exists as the first S3-compatible upload adapter
+- upload metadata now supports `storageKey` and `publicUrl`
+- processing can request a local working copy from the active upload-storage provider
+
+### Stage 2 — move media artifacts to object storage
+
+- Refactor artifact persistence so poster and key-frame images can be uploaded after ffmpeg extraction
+- Store object keys or URLs in session metadata instead of assuming local files remain present
+- Keep local artifact handling for development
+
+Definition of done:
+
+- Posters and key frames can render from object storage in production
+- Session delete clears artifact objects as well as the session record
+
+Current progress:
+
+- `lib/storage/s3/artifact-storage.ts` exists as the first S3-compatible artifact adapter
+- artifact route now reads through `lib/storage/artifacts.ts`
+- delete flows now clear artifacts through storage abstractions instead of direct route-level file handling
+- ffmpeg now writes temp artifacts for processing, then persists them through the active artifact-storage provider
+
+### Stage 3 — finish Neon setup
+
+- Create the real Neon database/project for the beta
+- Run `db/neon/001_create_swing_sessions.sql`
+- Verify the app can use `SESSION_REPOSITORY_PROVIDER=neon`
+- Confirm local fallback still works when env vars are absent
+
+Definition of done:
+
+- Session list/details/read/write/delete all work against Neon
+
+### Stage 4 — production route cleanup
+
+- Remove route assumptions that files are always on the local filesystem
+- Update artifact serving to use storage-backed URLs or a storage-backed fetch path
+- Make delete flows remove:
+  - session metadata
+  - uploaded video object
+  - artifact objects
+
+Definition of done:
+
+- No production code path depends on durable local disk
+
+### Stage 5 — Vercel environment setup
+
+- Add Vercel env vars for:
+  - `DATABASE_URL`
+  - `SESSION_REPOSITORY_PROVIDER=neon`
+  - upload/artifact storage credentials
+  - upload/artifact storage provider selection
+  - OpenRouter credentials
+- Decide whether artifact URLs are:
+  - public
+  - signed
+  - proxied through the app
+
+Definition of done:
+
+- Preview and production environments both have complete config
+
+Suggested initial Vercel values:
+
+- `COACHING_ANALYSIS_PROVIDER=openrouter`
+- `SESSION_REPOSITORY_PROVIDER=neon`
+- `UPLOAD_STORAGE_PROVIDER=s3`
+- `ARTIFACT_STORAGE_PROVIDER=s3`
+- `OPENROUTER_API_KEY=...`
+- `OPENROUTER_MODEL=openai/gpt-4.1-mini`
+- `DATABASE_URL=...`
+- `S3_BUCKET=...`
+- `S3_REGION=...`
+- `S3_ENDPOINT=...` when using R2 or another S3-compatible provider
+- `S3_ACCESS_KEY_ID=...`
+- `S3_SECRET_ACCESS_KEY=...`
+- `S3_PUBLIC_BASE_URL=...` when you want directly renderable object URLs
+- `S3_FORCE_PATH_STYLE=true` only when required by the provider
+
+### Stage 6 — beta verification
+
+- Deploy to Vercel
+- Verify end to end:
+  - upload a swing
+  - analyze it
+  - open session list
+  - open session details
+  - view poster and key frames
+  - rerun analysis
+  - delete a session
+- Test on a real external device, not just localhost
+
+Definition of done:
+
+- A golfer can use the hosted product without any local-machine dependency
+
+### Stage 7 — beta feedback loop
+
+- Give your nephew a narrow brief:
+  - does the upload flow feel reliable?
+  - do the images/stills help?
+  - is the summary believable?
+  - are the fixes and drills useful?
+  - are the scores meaningful or distracting?
+- Log the biggest misses before broadening the beta
+
+Definition of done:
+
+- We have real golfer feedback that can guide the next coaching-quality pass

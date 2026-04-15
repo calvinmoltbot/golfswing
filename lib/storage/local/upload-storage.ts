@@ -41,11 +41,17 @@ export const localUploadStorage: UploadStorage = {
       originalName: file.name,
       mimeType: file.type || 'application/octet-stream',
       sizeBytes: buffer.byteLength,
-      createdAt
+      createdAt,
+      storageKey: null,
+      publicUrl: null
     };
   },
 
   async delete(upload) {
     await rm(upload.absolutePath, { force: true });
+  },
+
+  async prepareForProcessing(upload) {
+    return upload.absolutePath;
   }
 };

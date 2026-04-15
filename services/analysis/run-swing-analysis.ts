@@ -2,6 +2,7 @@ import type { SwingAnalysisRequest, SwingAnalysisResponse } from '@/types/analys
 import type { SwingSessionPipelineStage, SwingSessionRecord } from '@/types/session';
 import { detectSwingPhases } from '@/lib/phases';
 import { writeSession } from '@/lib/storage/sessions';
+import { prepareUploadForProcessing } from '@/lib/storage/uploads';
 import { extractMediaArtifacts } from '@/services/media-artifacts';
 import { analyzeSwingCoaching } from '@/services/coaching-analysis';
 import { estimatePoseFromVideo } from '@/services/pose-estimation';
@@ -44,7 +45,9 @@ export async function runSwingAnalysis({
     }
   });
 
-  const poseEstimation = await estimatePoseFromVideo({ videoPath: session.file.absolutePath });
+  const videoPath = await prepareUploadForProcessing(session.file);
+
+  const poseEstimation = await estimatePoseFromVideo({ videoPath });
 
   await saveStage(session, 'phase-detection', {
     pipeline: {
@@ -64,7 +67,7 @@ export async function runSwingAnalysis({
 
   const mediaArtifacts = await extractMediaArtifacts({
     sessionId: session.id,
-    videoPath: session.file.absolutePath,
+    videoPath,
     keyFrames: poseEstimation.metrics.keyFrames
   });
 
