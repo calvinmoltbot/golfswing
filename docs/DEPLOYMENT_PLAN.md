@@ -30,6 +30,12 @@ Current implementation progress:
 - uploads can now be staged for processing through the upload-storage abstraction
 - media artifact serving and cleanup now go through artifact-storage abstractions rather than direct route-level disk reads
 - both uploads and artifacts now have first-pass S3-compatible adapters
+- local smoke tests have now validated the full stack with:
+  - `SESSION_REPOSITORY_PROVIDER=neon`
+  - `UPLOAD_STORAGE_PROVIDER=s3`
+  - `ARTIFACT_STORAGE_PROVIDER=s3`
+  - R2-backed upload and artifact reads
+  - Neon-backed session create/read/write
 
 ## Recommended production shape
 
@@ -208,6 +214,7 @@ Current progress:
 - `lib/storage/s3/upload-storage.ts` exists as the first S3-compatible upload adapter
 - upload metadata now supports `storageKey` and `publicUrl`
 - processing can request a local working copy from the active upload-storage provider
+- validated locally against Cloudflare R2 on 2026-04-15
 
 ### Stage 2 — move media artifacts to object storage
 
@@ -238,6 +245,11 @@ Definition of done:
 
 - Session list/details/read/write/delete all work against Neon
 
+Current progress:
+
+- validated locally against Neon on 2026-04-15
+- direct SQL verification confirmed session rows are being written to `swing_sessions`
+
 ### Stage 4 — production route cleanup
 
 - Remove route assumptions that files are always on the local filesystem
@@ -267,6 +279,11 @@ Definition of done:
 Definition of done:
 
 - Preview and production environments both have complete config
+
+Current blocker:
+
+- the Vercel CLI is installed but the token in this environment is currently invalid
+- next deployment step requires `vercel login` or a fresh Vercel token before env setup and deploy can continue
 
 Suggested initial Vercel values:
 
