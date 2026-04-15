@@ -11,7 +11,9 @@ export function ReanalyzeButton({
   initialPlayerGoal,
   initialUsualMiss,
   initialShotShape,
-  initialSkillBand
+  initialSkillBand,
+  rawVideoAvailable,
+  retiredAt
 }: {
   sessionId: string;
   initialNotes: string;
@@ -21,11 +23,22 @@ export function ReanalyzeButton({
   initialUsualMiss: string;
   initialShotShape: string;
   initialSkillBand: SwingAnalysisRequest['skillBand'];
+  rawVideoAvailable: boolean;
+  retiredAt: string | null;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onClick() {
+    if (!rawVideoAvailable) {
+      setError(
+        retiredAt
+          ? `The raw swing video was retired on ${new Date(retiredAt).toLocaleDateString('en-GB')} to control storage costs.`
+          : 'The raw swing video is no longer available for reruns.'
+      );
+      return;
+    }
+
     if (!initialPlayerContext) {
       setError('Set player context before rerunning analysis.');
       return;
@@ -65,9 +78,19 @@ export function ReanalyzeButton({
 
   return (
     <div className="grid" style={{ gap: 8 }}>
-      <button className="button secondary" type="button" onClick={onClick} disabled={loading}>
-        {loading ? 'Reanalyzing…' : 'Reanalyze session'}
+      <button
+        className="button secondary"
+        type="button"
+        onClick={onClick}
+        disabled={loading || !rawVideoAvailable}
+      >
+        {loading ? 'Reanalyzing…' : rawVideoAvailable ? 'Reanalyze session' : 'Raw video retired'}
       </button>
+      {!rawVideoAvailable ? (
+        <div className="muted">
+          The saved report and stills remain available, but rerunning analysis requires a fresh upload.
+        </div>
+      ) : null}
       {error ? <div className="muted">{error}</div> : null}
     </div>
   );

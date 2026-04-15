@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ReanalyzeButton } from '@/components/reanalyze-button';
 import { DeleteSessionButton } from '@/components/session-actions';
+import { sessionCanReanalyze } from '@/lib/storage/retention';
 import { readSession } from '@/lib/storage/sessions';
 import type { PoseMetrics, SwingPhaseDetection } from '@/types/analysis';
 import type { MediaArtifact } from '@/types/media-artifacts';
@@ -92,6 +93,7 @@ export default async function SessionDetailsPage({
 }) {
   const { sessionId } = await params;
   const session = await readSession(sessionId);
+  const canReanalyze = session ? sessionCanReanalyze(session) : false;
 
   if (!session) {
     notFound();
@@ -229,6 +231,8 @@ export default async function SessionDetailsPage({
               initialUsualMiss={session.usualMiss}
               initialShotShape={session.shotShape}
               initialSkillBand={session.skillBand}
+              rawVideoAvailable={canReanalyze}
+              retiredAt={session.file.retiredAt || null}
             />
             <DeleteSessionButton sessionId={session.id} redirectTo="/sessions" />
           </div>
@@ -289,8 +293,20 @@ export default async function SessionDetailsPage({
             <MetricTile label="Camera view" value={session.playerContext?.cameraView || 'Not set'} small />
             <MetricTile label="Report mode" value={session.reportMode} small />
             <MetricTile label="Skill band" value={session.skillBand} small />
+            <MetricTile label="Raw video" value={canReanalyze ? 'Available' : 'Retired'} small />
             <MetricTile label="Clip size" value={`${(session.file.sizeBytes / (1024 * 1024)).toFixed(2)} MB`} small />
           </div>
+
+          {session.file.videoStatus === 'retired' ? (
+            <div className="card inset prose-card">
+              <div className="muted">Storage policy</div>
+              <p style={{ margin: 0 }}>
+                The original uploaded clip was retired
+                {session.file.retiredAt ? ` on ${formatDate(session.file.retiredAt)}` : ''}
+                {' '}to control beta storage costs. The report and still images remain available.
+              </p>
+            </div>
+          ) : null}
 
           <div className="card inset prose-card">
             <div className="muted">Player notes</div>

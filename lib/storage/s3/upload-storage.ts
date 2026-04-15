@@ -81,7 +81,7 @@ export const s3UploadStorage: UploadStorage = {
 
   async delete(upload) {
     await Promise.allSettled([
-      rm(upload.absolutePath, { force: true }),
+      upload.absolutePath ? rm(upload.absolutePath, { force: true }) : Promise.resolve(),
       upload.storageKey
         ? getS3Client().send(
             new DeleteObjectCommand({

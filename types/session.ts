@@ -26,6 +26,18 @@ export type UploadedSwingSession = {
   status: SwingSessionStatus;
 };
 
+export type SwingSessionFile = {
+  absolutePath: string;
+  storedName: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  storageKey?: string | null;
+  publicUrl?: string | null;
+  videoStatus?: 'available' | 'retired';
+  retiredAt?: string | null;
+};
+
 export type SwingSessionRecord = {
   id: string;
   createdAt: string;
@@ -48,13 +60,5 @@ export type SwingSessionRecord = {
   };
   analysis: SwingAnalysisResponse | null;
   error: string | null;
-  file: {
-    absolutePath: string;
-    storedName: string;
-    originalName: string;
-    mimeType: string;
-    sizeBytes: number;
-    storageKey?: string | null;
-    publicUrl?: string | null;
-  };
+  file: SwingSessionFile;
 };

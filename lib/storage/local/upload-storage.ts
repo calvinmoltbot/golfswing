@@ -48,6 +48,10 @@ export const localUploadStorage: UploadStorage = {
   },
 
   async delete(upload) {
+    if (!upload.absolutePath) {
+      return;
+    }
+
     await rm(upload.absolutePath, { force: true });
   },
 

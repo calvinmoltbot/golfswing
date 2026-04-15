@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { swingAnalysisRequestSchema } from '@/types/analysis';
+import { sessionCanReanalyze } from '@/lib/storage/retention';
 import { readSession } from '@/lib/storage/sessions';
 import { markSwingAnalysisFailure, runSwingAnalysis } from '@/services/analysis/run-swing-analysis';
 
@@ -19,6 +20,10 @@ export async function POST(
 
     if (!session) {
       throw new Error('Session not found.');
+    }
+
+    if (!sessionCanReanalyze(session)) {
+      throw new Error('The raw swing video has been retired to control storage costs. Upload the clip again to rerun analysis.');
     }
 
     const result = await runSwingAnalysis({

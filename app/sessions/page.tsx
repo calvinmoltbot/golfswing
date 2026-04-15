@@ -91,6 +91,12 @@ export default async function SessionsPage() {
                       <div className="value small">{session.status}</div>
                     </div>
                     <div className="metric-tile">
+                      <div className="muted">Raw video</div>
+                      <div className="value small">
+                        {session.file.videoStatus === 'retired' ? 'Retired' : 'Available'}
+                      </div>
+                    </div>
+                    <div className="metric-tile">
                       <div className="muted">Clip size</div>
                       <div className="value small">{formatBytes(session.file.sizeBytes)}</div>
                     </div>
@@ -100,6 +106,16 @@ export default async function SessionsPage() {
                     <div className="muted">Latest analysis</div>
                     <p style={{ margin: 0 }}>{session.analysis?.summary || 'Analysis pending.'}</p>
                   </div>
+
+                  {session.file.videoStatus === 'retired' ? (
+                    <div className="card inset prose-card">
+                      <div className="muted">Storage policy</div>
+                      <p style={{ margin: 0 }}>
+                        Raw video retired{session.file.retiredAt ? ` on ${formatDate(session.file.retiredAt)}` : ''}.
+                        Stills and report remain available.
+                      </p>
+                    </div>
+                  ) : null}
 
                   <div className="row-between start" style={{ flexWrap: 'wrap' }}>
                     <Link href={sessionHref} className="button secondary">

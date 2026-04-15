@@ -67,7 +67,9 @@ export function normalizeSessionRecord(record: SwingSessionRecord): SwingSession
     file: {
       ...record.file,
       storageKey: record.file.storageKey || null,
-      publicUrl: record.file.publicUrl || null
+      publicUrl: record.file.publicUrl || null,
+      videoStatus: record.file.videoStatus || 'available',
+      retiredAt: record.file.retiredAt || null
     }
   };
 }
@@ -113,7 +115,9 @@ export function createSessionRecordFromUpload(upload: StoredUpload): SwingSessio
       mimeType: upload.mimeType,
       sizeBytes: upload.sizeBytes,
       storageKey: upload.storageKey || null,
-      publicUrl: upload.publicUrl || null
+      publicUrl: upload.publicUrl || null,
+      videoStatus: 'available',
+      retiredAt: null
     }
   };
 }
