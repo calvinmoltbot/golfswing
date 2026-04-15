@@ -32,6 +32,15 @@ const phaseLabels: Record<keyof SwingAnalysisResponse['phaseObservations'], stri
   finish: 'Finish'
 };
 
+const phaseScoreLabels: Record<keyof SwingAnalysisResponse['phaseScores'], string> = {
+  address: 'Address',
+  backswing: 'Backswing',
+  top: 'Top',
+  transition: 'Transition',
+  impact: 'Impact',
+  finish: 'Finish'
+};
+
 const issueSeverityLabel: Record<'low' | 'medium' | 'high', string> = {
   low: 'Low',
   medium: 'Medium',
@@ -309,6 +318,18 @@ export function UploadForm() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="card inset" style={{ marginTop: 12 }}>
+              <div className="muted" style={{ marginBottom: 8 }}>Phase scorecard</div>
+              <div className="grid" style={{ gap: 8 }}>
+                {Object.entries(result.phaseScores).map(([phase, phaseScore]) => (
+                  <div key={phase}>
+                    <strong>{phaseScoreLabels[phase as keyof typeof phaseScoreLabels]}</strong>{' '}
+                    <span className="muted">({phaseScore.score}/10)</span>
+                    <div className="muted" style={{ marginTop: 4 }}>{phaseScore.reason}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           <div className="card">

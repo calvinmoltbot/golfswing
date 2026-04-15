@@ -86,6 +86,11 @@ export const swingIssueCodeSchema = z.enum([
 
 export type SwingIssueCode = z.infer<typeof swingIssueCodeSchema>;
 
+export const swingPhaseScoreSchema = z.object({
+  score: z.number().int().min(1).max(10),
+  reason: z.string().min(1)
+});
+
 export const swingAnalysisResponseSchema = z.object({
   summary: z.string().min(1),
   confidence: z.enum(['low', 'medium', 'high']),
@@ -122,6 +127,14 @@ export const swingAnalysisResponseSchema = z.object({
     transition: z.string().min(1),
     impact: z.string().min(1),
     finish: z.string().min(1)
+  }),
+  phaseScores: z.object({
+    address: swingPhaseScoreSchema,
+    backswing: swingPhaseScoreSchema,
+    top: swingPhaseScoreSchema,
+    transition: swingPhaseScoreSchema,
+    impact: swingPhaseScoreSchema,
+    finish: swingPhaseScoreSchema
   }),
   drills: z.array(
     z.object({

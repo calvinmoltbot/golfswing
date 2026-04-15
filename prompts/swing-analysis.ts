@@ -113,6 +113,14 @@ Return strict JSON only with this shape:
     "impact": string,
     "finish": string
   },
+  "phaseScores": {
+    "address": { "score": 1-10, "reason": string },
+    "backswing": { "score": 1-10, "reason": string },
+    "top": { "score": 1-10, "reason": string },
+    "transition": { "score": 1-10, "reason": string },
+    "impact": { "score": 1-10, "reason": string },
+    "finish": { "score": 1-10, "reason": string }
+  },
   "drills": [{ "name": string, "reason": string, "checkpoint": string }],
   "warnings": string[]
 }
@@ -120,6 +128,7 @@ Do not invent exact biomechanical certainty from weak evidence. Use cautious lan
 Prioritize actionable coaching over generic praise.
 Every priority fix must cite specific evidence from metrics or phase timings.
 Every issueTaxonomy item must use one of the allowed codes and include evidence.
+Every phaseScores item must include a 1-10 score and a short reason tied to the observed evidence.
 The primary finding should name the biggest problem and its likely ball-flight or contact consequence.
 The measurable checkpoint should be something a player can track in the next session.
 Avoid generic phrases such as "solid swing", "playable pattern", "looks good overall", "keep it up", or "minor tweaks".

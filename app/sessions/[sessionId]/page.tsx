@@ -196,6 +196,19 @@ export default async function SessionDetailsPage({
                 <p className="muted" style={{ margin: 0 }}>{session.analysis.measurableCheckpoint.whyItMatters}</p>
               </div>
 
+              <div className="card inset prose-card">
+                <div className="muted">Phase scorecard</div>
+                <ul className="bullet-list">
+                  {Object.entries(session.analysis.phaseScores).map(([phase, phaseScore]) => (
+                    <li key={phase}>
+                      <strong>{phase.charAt(0).toUpperCase() + phase.slice(1)}</strong>{' '}
+                      <span className="muted">({phaseScore.score}/10)</span>
+                      <div className="muted">{phaseScore.reason}</div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
               <div className="supporting-copy">
                 Use the key-frame stills to confirm the move visually, then train only the first fix until the checkpoint starts to feel repeatable.
               </div>

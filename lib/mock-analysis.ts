@@ -187,6 +187,27 @@ export function buildMockSwingAnalysis({
   const missSuffix = request.usualMiss ? ` The usual miss is ${request.usualMiss.trim()}.` : '';
   const shotShapeSuffix = request.shotShape ? ` Typical shot shape is ${request.shotShape.trim()}.` : '';
   const skillBandLabel = request.skillBand === 'beginner' ? 'beginner' : request.skillBand === 'advanced' ? 'advanced' : 'intermediate';
+  const addressScore = Math.max(4, 8 - (metrics.measurements.headDriftPx > 18 ? 1 : 0));
+  const backswingScore = Math.max(
+    3,
+    8 -
+      (metrics.measurements.hipTurnDeg < 45 ? 2 : 0) -
+      (metrics.measurements.tempoRatio > 2.8 ? 1 : 0)
+  );
+  const topScore = Math.max(3, 8 - (metrics.measurements.hipTurnDeg < 42 ? 2 : 1));
+  const transitionScore = Math.max(
+    2,
+    8 -
+      (metrics.measurements.pelvisShiftPx > 20 ? 2 : 0) -
+      (metrics.measurements.tempoRatio > 2.8 ? 2 : 0)
+  );
+  const impactScore = Math.max(
+    3,
+    8 -
+      (metrics.measurements.shaftLeanAtImpactDeg < 10 ? 2 : 0) -
+      (metrics.measurements.pelvisShiftPx > 24 ? 1 : 0)
+  );
+  const finishScore = Math.max(5, 8 - (metrics.measurements.headDriftPx > 20 ? 1 : 0));
 
   return {
     summary: `${viewLabel} mock analysis for a ${skillBandLabel} player hitting ${request.playerContext.club}. The biggest gains appear to come from ${viewPriorityLabel} and better ${clubPriorityLabel}.${notesSuffix}${goalSuffix}${missSuffix}${shotShapeSuffix}`,
@@ -241,6 +262,50 @@ export function buildMockSwingAnalysis({
       finish: isFaceOn
         ? `The finish reaches ${formatPhaseTime(phases.finishMs)} and suggests the swing can stay balanced if the centered pivot improves earlier.`
         : `The finish reaches ${formatPhaseTime(phases.finishMs)} and suggests the motion can stay balanced when delivery is cleaner earlier in the swing.`
+    },
+    phaseScores: {
+      address: {
+        score: addressScore,
+        reason:
+          metrics.measurements.headDriftPx > 18
+            ? `Setup is usable, but ${metrics.measurements.headDriftPx}px of head drift suggests the address pattern is not fully stable.`
+            : 'Setup looks stable enough to start the motion without a major address penalty.'
+      },
+      backswing: {
+        score: backswingScore,
+        reason:
+          metrics.measurements.hipTurnDeg < 45
+            ? `Shoulder turn is solid, but hip turn reaches only ${metrics.measurements.hipTurnDeg}°, limiting coil quality.`
+            : 'Backswing turn depth is functional and gives the player enough room to create speed.'
+      },
+      top: {
+        score: topScore,
+        reason:
+          metrics.measurements.hipTurnDeg < 42
+            ? `The top position loses quality because lower-body turn lags behind the ${metrics.measurements.shoulderTurnDeg}° shoulder turn.`
+            : 'The top position remains serviceable, though it could organize more cleanly before transition.'
+      },
+      transition: {
+        score: transitionScore,
+        reason:
+          metrics.measurements.pelvisShiftPx > 20
+            ? `Transition is dragged down by ${metrics.measurements.pelvisShiftPx}px of pelvis shift and a ${metrics.measurements.tempoRatio.toFixed(1)} tempo ratio.`
+            : 'Transition stays reasonably organized without a major slide pattern.'
+      },
+      impact: {
+        score: impactScore,
+        reason:
+          metrics.measurements.shaftLeanAtImpactDeg < 10
+            ? `Impact quality is limited by ${metrics.measurements.shaftLeanAtImpactDeg}° of shaft lean, which leaves room for a stronger strike pattern.`
+            : 'Impact delivery is reasonably functional and does not show a major strike penalty.'
+      },
+      finish: {
+        score: finishScore,
+        reason:
+          metrics.measurements.headDriftPx > 20
+            ? 'The finish stays mostly intact, but earlier movement patterns reduce how balanced it looks.'
+            : 'The finish position stays balanced and suggests the player can hold the motion together through the end.'
+      }
     },
     drills,
     warnings: ['Mock analysis only. Replace with model-backed coaching before using for real instruction.']

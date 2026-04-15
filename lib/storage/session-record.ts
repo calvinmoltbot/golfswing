@@ -1,5 +1,49 @@
 import type { StoredUpload } from '@/lib/storage/contracts';
+import type { SwingAnalysisResponse } from '@/types/analysis';
 import type { SwingSessionRecord, UploadedSwingSession } from '@/types/session';
+
+function createFallbackPhaseScores(analysis: Partial<SwingAnalysisResponse>): SwingAnalysisResponse['phaseScores'] {
+  const observations = analysis.phaseObservations;
+
+  return {
+    address: {
+      score: 6,
+      reason: observations?.address || 'Address quality looks serviceable based on the saved session data.'
+    },
+    backswing: {
+      score: 6,
+      reason: observations?.backswing || 'Backswing quality looks serviceable based on the saved session data.'
+    },
+    top: {
+      score: 6,
+      reason: observations?.top || 'Top-of-swing quality looks serviceable based on the saved session data.'
+    },
+    transition: {
+      score: 6,
+      reason: observations?.transition || 'Transition quality looks serviceable based on the saved session data.'
+    },
+    impact: {
+      score: 6,
+      reason: observations?.impact || 'Impact quality looks serviceable based on the saved session data.'
+    },
+    finish: {
+      score: 6,
+      reason: observations?.finish || 'Finish quality looks serviceable based on the saved session data.'
+    }
+  };
+}
+
+function normalizeAnalysisResponse(analysis: SwingSessionRecord['analysis']): SwingSessionRecord['analysis'] {
+  if (!analysis) {
+    return null;
+  }
+
+  return {
+    ...analysis,
+    issueTaxonomy: analysis.issueTaxonomy || [],
+    phaseScores: analysis.phaseScores || createFallbackPhaseScores(analysis)
+  };
+}
 
 export function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord {
   return {
@@ -18,7 +62,8 @@ export function normalizeSessionRecord(record: SwingSessionRecord): SwingSession
       phases: record.pipeline?.phases || null,
       mediaArtifacts: record.pipeline?.mediaArtifacts || null,
       coachingAnalysis: record.pipeline?.coachingAnalysis || null
-    }
+    },
+    analysis: normalizeAnalysisResponse(record.analysis)
   };
 }
 
