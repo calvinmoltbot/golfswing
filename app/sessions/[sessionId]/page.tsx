@@ -161,12 +161,12 @@ export default async function SessionDetailsPage({
 
           {session.analysis ? (
             <>
-              <div className="card inset prose-card">
+              <div className="coach-band stack-sm">
                 <div className="muted">Summary</div>
-                <p style={{ margin: 0 }}>{session.analysis.summary}</p>
+                <p style={{ margin: 0, fontSize: 18, lineHeight: 1.6 }}>{session.analysis.summary}</p>
               </div>
 
-              <div className="card inset prose-card">
+              <div className="card inset prose-card callout">
                 <div className="muted">Primary finding</div>
                 <strong>{session.analysis.primaryFinding.title}</strong>
                 <p style={{ margin: 0 }}>{session.analysis.primaryFinding.detail}</p>
@@ -178,6 +178,10 @@ export default async function SessionDetailsPage({
                 <strong>{session.analysis.measurableCheckpoint.label}</strong>
                 <p style={{ margin: 0 }}>{session.analysis.measurableCheckpoint.target}</p>
                 <p className="muted" style={{ margin: 0 }}>{session.analysis.measurableCheckpoint.whyItMatters}</p>
+              </div>
+
+              <div className="supporting-copy">
+                Use the key-frame stills to confirm the move visually, then train only the first fix until the checkpoint starts to feel repeatable.
               </div>
             </>
           ) : (
@@ -205,8 +209,8 @@ export default async function SessionDetailsPage({
       <section className="session-report-grid">
         <article className="card stack-lg">
           <div className="stack-sm">
-            <div className="eyebrow">Plan</div>
-            <h2 className="section-title">Priority fixes and drills</h2>
+            <div className="eyebrow">Practice plan</div>
+            <h2 className="section-title">What to work on next</h2>
           </div>
 
           {session.analysis ? (
@@ -246,8 +250,8 @@ export default async function SessionDetailsPage({
 
         <article className="card stack-lg">
           <div className="stack-sm">
-            <div className="eyebrow">Context</div>
-            <h2 className="section-title">Session setup</h2>
+            <div className="eyebrow">Player context</div>
+            <h2 className="section-title">What this report is based on</h2>
           </div>
 
           <div className="meta-grid">
@@ -272,88 +276,97 @@ export default async function SessionDetailsPage({
         </article>
       </section>
 
-      <section className="session-report-grid">
-        <article className="card stack-lg">
-          <div className="stack-sm">
-            <div className="eyebrow">Motion data</div>
-            <h2 className="section-title">Pose and timing</h2>
+      <section>
+        <details className="disclosure">
+          <summary>
+            <span>Diagnostics and pipeline details</span>
+          </summary>
+          <div className="disclosure-body">
+            <section className="session-report-grid">
+              <article className="card stack-lg">
+                <div className="stack-sm">
+                  <div className="eyebrow">Motion data</div>
+                  <h2 className="section-title">Pose and timing</h2>
+                </div>
+
+                {session.pipeline.poseEstimation ? (
+                  <>
+                    <div className="meta-grid">
+                      <MetricTile label="Provider" value={session.pipeline.poseEstimation.provider.id} small />
+                      <MetricTile label="Version" value={session.pipeline.poseEstimation.provider.version} small />
+                      <MetricTile label="Frames" value={session.pipeline.poseEstimation.keypointFrames.length} small />
+                    </div>
+                    <PoseMetricsSection metrics={session.pipeline.poseEstimation.metrics} />
+                  </>
+                ) : (
+                  <div className="card inset">
+                    <p style={{ margin: 0 }}>No pose-estimation artifacts saved yet.</p>
+                  </div>
+                )}
+              </article>
+
+              <article className="card stack-lg">
+                <div className="stack-sm">
+                  <div className="eyebrow">Pipeline</div>
+                  <h2 className="section-title">Phase timing and model metadata</h2>
+                </div>
+
+                {session.pipeline.phases ? (
+                  <div className="card inset">
+                    <PhaseList phases={session.pipeline.phases} />
+                  </div>
+                ) : (
+                  <div className="card inset">
+                    <p style={{ margin: 0 }}>No phase timings saved yet.</p>
+                  </div>
+                )}
+
+                {session.pipeline.coachingAnalysis ? (
+                  <div className="meta-grid">
+                    <MetricTile label="Provider" value={session.pipeline.coachingAnalysis.providerId} small />
+                    <MetricTile label="Model" value={session.pipeline.coachingAnalysis.model} small />
+                    <MetricTile label="Requested" value={formatDate(session.pipeline.coachingAnalysis.requestedAt)} small />
+                    <MetricTile
+                      label="Completed"
+                      value={
+                        session.pipeline.coachingAnalysis.completedAt
+                          ? formatDate(session.pipeline.coachingAnalysis.completedAt)
+                          : 'Not completed'
+                      }
+                      small
+                    />
+                    <MetricTile
+                      label="Validation"
+                      value={session.pipeline.coachingAnalysis.validationError ? 'Failed' : 'Passed'}
+                      small
+                    />
+                  </div>
+                ) : null}
+
+                {session.pipeline.failedStage ? (
+                  <div className="card inset prose-card">
+                    <div className="muted">Failed stage</div>
+                    <p style={{ margin: 0 }}>{session.pipeline.failedStage}</p>
+                  </div>
+                ) : null}
+
+                {session.pipeline.coachingAnalysis?.validationError ? (
+                  <div className="card inset prose-card">
+                    <div className="muted">Validation or provider error</div>
+                    <p style={{ margin: 0 }}>{session.pipeline.coachingAnalysis.validationError}</p>
+                  </div>
+                ) : null}
+
+                {session.error ? (
+                  <div className="card inset prose-card">
+                    <div className="muted">Last error</div>
+                    <p style={{ margin: 0 }}>{session.error}</p>
+                  </div>
+                ) : null}
+              </article>
+            </section>
           </div>
-
-          {session.pipeline.poseEstimation ? (
-            <>
-              <div className="meta-grid">
-                <MetricTile label="Provider" value={session.pipeline.poseEstimation.provider.id} small />
-                <MetricTile label="Version" value={session.pipeline.poseEstimation.provider.version} small />
-                <MetricTile label="Frames" value={session.pipeline.poseEstimation.keypointFrames.length} small />
-              </div>
-              <PoseMetricsSection metrics={session.pipeline.poseEstimation.metrics} />
-            </>
-          ) : (
-            <div className="card inset">
-              <p style={{ margin: 0 }}>No pose-estimation artifacts saved yet.</p>
-            </div>
-          )}
-        </article>
-
-        <article className="card stack-lg">
-          <div className="stack-sm">
-            <div className="eyebrow">Pipeline</div>
-            <h2 className="section-title">Phase timing and model metadata</h2>
-          </div>
-
-          {session.pipeline.phases ? (
-            <div className="card inset">
-              <PhaseList phases={session.pipeline.phases} />
-            </div>
-          ) : (
-            <div className="card inset">
-              <p style={{ margin: 0 }}>No phase timings saved yet.</p>
-            </div>
-          )}
-
-          {session.pipeline.coachingAnalysis ? (
-            <div className="meta-grid">
-              <MetricTile label="Provider" value={session.pipeline.coachingAnalysis.providerId} small />
-              <MetricTile label="Model" value={session.pipeline.coachingAnalysis.model} small />
-              <MetricTile label="Requested" value={formatDate(session.pipeline.coachingAnalysis.requestedAt)} small />
-              <MetricTile
-                label="Completed"
-                value={
-                  session.pipeline.coachingAnalysis.completedAt
-                    ? formatDate(session.pipeline.coachingAnalysis.completedAt)
-                    : 'Not completed'
-                }
-                small
-              />
-              <MetricTile
-                label="Validation"
-                value={session.pipeline.coachingAnalysis.validationError ? 'Failed' : 'Passed'}
-                small
-              />
-            </div>
-          ) : null}
-
-          {session.pipeline.failedStage ? (
-            <div className="card inset prose-card">
-              <div className="muted">Failed stage</div>
-              <p style={{ margin: 0 }}>{session.pipeline.failedStage}</p>
-            </div>
-          ) : null}
-
-          {session.pipeline.coachingAnalysis?.validationError ? (
-            <div className="card inset prose-card">
-              <div className="muted">Validation or provider error</div>
-              <p style={{ margin: 0 }}>{session.pipeline.coachingAnalysis.validationError}</p>
-            </div>
-          ) : null}
-
-          {session.error ? (
-            <div className="card inset prose-card">
-              <div className="muted">Last error</div>
-              <p style={{ margin: 0 }}>{session.error}</p>
-            </div>
-          ) : null}
-        </article>
+        </details>
       </section>
     </main>
   );
