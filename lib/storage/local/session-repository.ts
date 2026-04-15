@@ -17,6 +17,10 @@ function sessionPath(sessionId: string) {
   return path.join(sessionsRoot, `${sessionId}.json`);
 }
 
+function compareByCreatedAtDesc(left: SwingSessionRecord, right: SwingSessionRecord) {
+  return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+}
+
 export const localSessionRepository: SessionRepository = {
   async createFromUpload(upload: StoredUpload): Promise<SwingSessionRecord> {
     await ensureLocalStorage();
@@ -53,7 +57,7 @@ export const localSessionRepository: SessionRepository = {
         })
     );
 
-    return sessions.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+    return sessions.sort(compareByCreatedAtDesc);
   },
 
   async deleteById(sessionId) {

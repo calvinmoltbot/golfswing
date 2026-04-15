@@ -2,6 +2,10 @@ import type { StoredUpload } from '@/lib/storage/contracts';
 import type { SwingAnalysisResponse } from '@/types/analysis';
 import type { SwingSessionRecord, UploadedSwingSession } from '@/types/session';
 
+function normalizeTimestamp(value: string | Date) {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
 function createFallbackPhaseScores(analysis: Partial<SwingAnalysisResponse>): SwingAnalysisResponse['phaseScores'] {
   const observations = analysis.phaseObservations;
 
@@ -48,6 +52,8 @@ function normalizeAnalysisResponse(analysis: SwingSessionRecord['analysis']): Sw
 export function normalizeSessionRecord(record: SwingSessionRecord): SwingSessionRecord {
   return {
     ...record,
+    createdAt: normalizeTimestamp(record.createdAt),
+    updatedAt: normalizeTimestamp(record.updatedAt),
     reportMode: record.reportMode || 'concise',
     playerGoal: record.playerGoal || '',
     usualMiss: record.usualMiss || '',

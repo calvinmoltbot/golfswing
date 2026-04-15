@@ -10,6 +10,10 @@ function getPositiveInteger(value: string | undefined, fallback: number) {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function compareByCreatedAtDesc(left: SwingSessionRecord, right: SwingSessionRecord) {
+  return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+}
+
 function hasRetainedRawVideo(session: SwingSessionRecord) {
   return session.file.videoStatus !== 'retired';
 }
@@ -54,7 +58,7 @@ export async function applyVideoRetentionPolicies(repository: SessionRepository)
   const retainedCandidates = sessions.filter(hasRetainedRawVideo);
   const keptSessionIds = new Set(
     retainedCandidates
-      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+      .sort(compareByCreatedAtDesc)
       .slice(0, maxRetainedRawVideos)
       .map((session) => session.id)
   );

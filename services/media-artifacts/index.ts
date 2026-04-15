@@ -1,6 +1,7 @@
 import { access } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { createFfmpegMediaArtifactProvider } from '@/services/media-artifacts/ffmpeg';
+import { createNoopMediaArtifactProvider } from '@/services/media-artifacts/noop';
 import type { MediaArtifactProvider } from '@/types/media-artifacts';
 
 async function canUseFfmpeg() {
@@ -19,11 +20,15 @@ async function resolveProvider(): Promise<MediaArtifactProvider> {
     return createFfmpegMediaArtifactProvider();
   }
 
+  if (configuredProvider === 'noop') {
+    return createNoopMediaArtifactProvider();
+  }
+
   if (!configuredProvider && (await canUseFfmpeg())) {
     return createFfmpegMediaArtifactProvider();
   }
 
-  throw new Error('No supported media artifact provider is available. Install ffmpeg or set MEDIA_ARTIFACT_PROVIDER.');
+  return createNoopMediaArtifactProvider();
 }
 
 export async function extractMediaArtifacts(input: {

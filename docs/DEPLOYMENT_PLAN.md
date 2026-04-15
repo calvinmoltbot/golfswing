@@ -174,6 +174,7 @@ Then:
 - `S3_SECRET_ACCESS_KEY=...`
 - `S3_PUBLIC_BASE_URL=...` if artifact/object URLs should be directly renderable
 - `S3_FORCE_PATH_STYLE=true` when required by the provider
+- `MEDIA_ARTIFACT_PROVIDER=noop` when `ffmpeg` is unavailable in the hosted runtime
 - `MAX_RETAINED_RAW_VIDEOS=10`
 - `RAW_VIDEO_RETENTION_DAYS=14`
 
@@ -301,6 +302,7 @@ Suggested initial Vercel values:
 - `S3_SECRET_ACCESS_KEY=...`
 - `S3_PUBLIC_BASE_URL=...` when you want directly renderable object URLs
 - `S3_FORCE_PATH_STYLE=true` only when required by the provider
+- `MEDIA_ARTIFACT_PROVIDER=noop` unless you provide a hosted-compatible still-extraction path
 - `MAX_RETAINED_RAW_VIDEOS=10`
 - `RAW_VIDEO_RETENTION_DAYS=14`
 

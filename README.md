@@ -89,6 +89,9 @@ The current deployment path is:
 - Neon for session metadata
 - S3-compatible object storage for uploaded videos and still images
 
+For hosted environments without `ffmpeg`, the app can fall back to a no-op
+media-artifact provider so analysis still completes without poster/key-frame extraction.
+
 See [`docs/DEPLOYMENT_PLAN.md`](docs/DEPLOYMENT_PLAN.md) for the staged rollout checklist.
 
 ## Future milestones
