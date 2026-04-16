@@ -8,7 +8,7 @@ Install these once:
 
 1. `Node.js` LTS
 2. `ffmpeg`
-3. `git` if the tester needs to pull updates
+3. `git`
 
 Suggested install commands:
 
@@ -23,6 +23,8 @@ The folder needs:
 
 - the full app repository
 - a working `.env.local`
+
+For this beta path, assume updates happen through `git`.
 
 ## How the tester uses it
 
@@ -57,6 +59,17 @@ That will:
 
 - run `git pull --ff-only`
 - run `npm install`
+
+## Important `.env.local` note
+
+`git pull` will not update `.env.local`.
+
+That is good. It means:
+
+- the tester keeps the same local secrets and settings
+- app updates do not overwrite the env file
+
+Give the tester the `.env.local` once during setup and then leave it in place.
 
 ## Notes
 

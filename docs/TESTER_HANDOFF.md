@@ -7,6 +7,7 @@ Use this when handing the app to a golfer for local testing.
 - a MacBook
 - Node.js installed
 - `ffmpeg` installed
+- `git` installed
 - the app folder
 - the provided `.env.local`
 
@@ -34,11 +35,7 @@ Use this when handing the app to a golfer for local testing.
 
 ## Update path
 
-If they are using Git:
-
 1. Double-click `Update Golf Swing.command`
 2. Then start the app again
 
-If they are not using Git:
-
-- replace the app folder with a fresh copy from you
+`Update Golf Swing.command` only updates the code. It does not replace `.env.local`.
