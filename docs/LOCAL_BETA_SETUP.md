@@ -78,3 +78,5 @@ Give the tester the `.env.local` once during setup and then leave it in place.
 - Default local URL is `http://127.0.0.1:3000`
 - If you do not want the script to open the browser automatically, run it from
   Terminal with `AUTO_OPEN=0 ./scripts/start-beta.sh`
+- If startup says port `3000` is already in use, stop the old server first with
+  `./scripts/stop-beta.sh`

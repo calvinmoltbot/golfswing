@@ -5,6 +5,10 @@ import type { MediaArtifact, MediaArtifactResult } from '@/types/media-artifacts
 
 const artifactsRoot = path.join(process.cwd(), 'data', 'artifacts');
 
+function normalizeStorageKey(storageKey: string) {
+  return storageKey.startsWith('artifacts/') ? storageKey.slice('artifacts/'.length) : storageKey;
+}
+
 function buildArtifactUrl(sessionId: string, fileName: string) {
   return `/api/sessions/${sessionId}/artifacts/${fileName}`;
 }
@@ -56,7 +60,7 @@ export const localArtifactStorage: ArtifactStorage = {
   async readArtifact(artifact) {
     const absolutePath =
       artifact.absolutePath ||
-      path.join(artifactsRoot, artifact.storageKey);
+      path.join(artifactsRoot, normalizeStorageKey(artifact.storageKey));
 
     return readFile(path.normalize(absolutePath));
   },

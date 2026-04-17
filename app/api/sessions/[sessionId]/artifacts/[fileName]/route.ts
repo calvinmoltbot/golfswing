@@ -25,12 +25,20 @@ export async function GET(
     return new NextResponse('Not found', { status: 404 });
   }
 
-  const buffer = await readStoredArtifact(artifact);
+  try {
+    const buffer = await readStoredArtifact(artifact);
 
-  return new NextResponse(buffer, {
-    headers: {
-      'Content-Type': artifact.contentType,
-      'Cache-Control': 'private, max-age=3600'
+    return new NextResponse(buffer, {
+      headers: {
+        'Content-Type': artifact.contentType,
+        'Cache-Control': 'private, max-age=3600'
+      }
+    });
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return new NextResponse('Not found', { status: 404 });
     }
-  });
+
+    throw error;
+  }
 }

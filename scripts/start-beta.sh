@@ -52,6 +52,16 @@ if [ -f "$PID_FILE" ]; then
   rm -f "$PID_FILE"
 fi
 
+if command -v lsof >/dev/null 2>&1; then
+  PORT_PID="$(lsof -ti "tcp:$PORT" -sTCP:LISTEN 2>/dev/null | head -n 1 || true)"
+  if [ -n "${PORT_PID:-}" ]; then
+    echo "Port $PORT is already in use by process $PORT_PID."
+    echo "Stop the old server first, then try again."
+    echo "If it was a previous beta run, use ./scripts/stop-beta.sh"
+    exit 1
+  fi
+fi
+
 if [ ! -d "$ROOT_DIR/node_modules" ]; then
   echo "Installing dependencies..."
   npm install
